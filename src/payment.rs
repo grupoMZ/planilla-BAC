@@ -1,19 +1,16 @@
-use calamine::{open_workbook, DataType, Error, RangeDeserializerBuilder, Reader, Xlsx};
+use std::collections::HashMap;
 use std::fs;
+
+use calamine::{open_workbook, DataType, Error, RangeDeserializerBuilder, Reader, Xlsx};
 
 use crate::config::Config;
 use crate::employee::{get_employees, Employee};
 
 pub struct Payment {
-    pub persons: Vec<Person>,
+    pub persons: HashMap<String, u64>,
     date: String,
     column: Column,
     text: Text,
-}
-
-pub struct Person {
-    pub alias: String,
-    pub amount: u64,
 }
 
 struct Column {
@@ -26,18 +23,10 @@ struct Text {
     amount: String,
 }
 
-impl Person {
-    pub fn new(employee: &Employee) -> Person {
-        Person {
-            alias: employee.alias.clone(),
-            amount: 0,
-        }
-    }
-}
 
 impl Payment {
     pub fn new(config: &Config, employees: &Vec<Employee>) -> Payment {
-        let persons: Vec<Person> = Vec::new();
+        let persons  = HashMap::new();
         let date = config.get_payment_date();
         let column = Column {
             alias: 255,
@@ -59,7 +48,7 @@ impl Payment {
 
     fn set_persons(&mut self, employees: &Vec<Employee>) {
         for employee in employees.iter() {
-            self.persons.push(Person::new(employee));
+            self.persons.insert(employee.alias.clone(), 0);
         }
     }
 
@@ -74,17 +63,11 @@ impl Payment {
     }
 
     pub fn new_test_payment() -> Payment {
+        let mut persons = HashMap::new();
+        persons.insert("Maria Jose".to_string(), 123456 as u64);
+        persons.insert("Siria".to_string(), 7890 as u64);
         let payment = Payment {
-            persons: vec![
-                Person {
-                    alias: "Maria Jose".to_string(),
-                    amount: 123456,
-                },
-                Person {
-                    alias: "Siria".to_string(),
-                    amount: 7890,
-                },
-            ],
+            persons,
             date: String::from("20210519"),
             column: Column {
                 alias: 255,
@@ -102,19 +85,14 @@ impl Payment {
     pub fn get_total_payment(&self) -> u64 {
         let mut total = 0;
 
-        for person in self.persons.iter() {
-            total += person.amount;
+        for (alias, amount ) in self.persons.iter() {
+            total += amount;
         }
         total
     }
 
     pub fn get_total_transactions(&self) -> u64 {
-        let mut total = 0;
-
-        for person in self.persons.iter() {
-            total += 1;
-        }
-        total
+        self.persons.len() as u64
     }
 
     pub fn compute_payment_amount(&mut self, path: &str, sheet: &String) -> Result<(), Error> {
@@ -148,8 +126,8 @@ impl Payment {
         let col = &row[self.column.alias];
         if col.is_string() {
             let alias: String = col.to_string();
-            for person in self.persons.iter_mut() {
-                if alias.contains(&person.alias) {
+            for (person_alias, amount) in self.persons.iter_mut() {
+                if alias.contains(person_alias) {
                     let f = &row[self.column.amount];
                     if f.is_float() {
                         let ff = f.get_float();
@@ -159,7 +137,7 @@ impl Payment {
                             }
                             Some(nn) => (nn * 100.0).round() as u64,
                         };
-                        person.amount += n;
+                        *amount += n;
                     } else if f.is_int() {
                         let ff = f.get_int();
                         let n: u64 = match ff {
@@ -221,15 +199,13 @@ mod tests {
         let mut config = Config::new(1, 1);
         let employees = get_employees(&config).expect("Error leyendo empleados");
         let payment = Payment::new(&config, &employees);
-        let p0 = &payment.persons[0];
+        let p0 = &payment.persons["Silvia"];
         let e0 = &employees[0];
         let last = employees.len() - 1;
-        let pl = &payment.persons[last];
+        let pl = &payment.persons["Esahu"];
         let el = &employees[last];
-        assert_eq!(&e0.alias, &p0.alias);
-        assert_eq!(0, p0.amount);
-        assert_eq!(&el.alias, &pl.alias);
-        assert_eq!(0, pl.amount);
+        assert_eq!(0, payment.persons[&e0.alias]);
+        assert_eq!(0, payment.persons[&el.alias]);
     }
     #[test]
     fn get_pay() {
@@ -240,8 +216,8 @@ mod tests {
         //assert_matches!(e, u);
         assert_eq!(1, payment.column.alias);
         assert_eq!(22, payment.column.amount);
-        assert_eq!(123456, payment.persons[0].amount); // remains unchanged from test
-        assert_eq!(7890 + 32579, payment.persons[1].amount); // add to test the amount in planilla
+        assert_eq!(123456, payment.persons["Maria Jose"]); // remains unchanged from test
+        assert_eq!(7890 + 32579, payment.persons["Siria"]); // add to test the amount in planilla
     }
 
     #[test]
