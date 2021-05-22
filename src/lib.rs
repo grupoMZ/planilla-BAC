@@ -1,7 +1,12 @@
-#[cfg(test)]
-mod tests {
-    #[test]
-    fn it_works() {
-        assert_eq!(2 + 2, 4);
-    }
+
+use calamine::{open_workbook, DataType, Error, RangeDeserializerBuilder, Reader, Xlsx};
+use chrono::{Datelike, Local};
+use serde::{Deserialize, Serialize};
+use text_io::read;
+
+mod config;
+mod employee;
+mod formatprn;
+mod payment;
+
 }
