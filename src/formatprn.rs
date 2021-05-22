@@ -2,7 +2,7 @@ use crate::config::Config;
 use crate::payment as pay;
 use crate::payment::Payment;
 
-fn gen_first_line(config: &Config, payment: &Payment) -> String {
+pub fn gen_first_line(config: &Config, payment: &Payment) -> String {
     let colwidth = &config.bac.colwidth;
     let bac = &config.bac;
     let mut strlen: u8 = 0;

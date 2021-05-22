@@ -1,7 +1,8 @@
 {
     "path": {
-        "planilla_fijos_dir": "../Planilla ISSS y AFP 2021",
-        "planilla_eventuales_dir": "../Planilla Retenciones 2021",
+        "planilla_fijos_dir": "../Planilla_ISSS_y_AFP_2021",
+        "planilla_eventuales_dir": "../Planilla_Retenciones_2021",
+        "pago_bac_dir": "../pago_bac",
         "planilla_fijos": "## GMZ Planilla Operaciones %%%.xlsx",
         "planilla_eventuales": "## GMZ Planilla de eventuales %%%.xlsx",
         "pago_bac_salario": "##### pago BAC salario %%%.prn",

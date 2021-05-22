@@ -1,13 +1,3 @@
-/* Interesting rows
-* Pago BAC Salario:
-*   Planilla Operaciones -> Planilla Ops 1 al 31: Col. B (NOMBRE EMPLEADO ), Col. W (NETO A RECIBIR)
-*   Planilla Operaciones -> Planilla Admin: Col. B (NOMBRE EMPLEADO ), Col. U (NETO A RECIBIR)
-*   Planilla de Eventuales -> Planilla Fija Operacion: Col. C (NOMBRE), Col. W (RECIBE)
-* Pago BAC viatico
-*   Planilla Operaciones -> Viaticos OPs: Col. C (NOMBRE), Col. O (RECIBE)
-* Pago BAC propina
-*   Planilla de Eventuales -> Propina Bar y Cocina: Col. C (NOMBRE), Col. J (RECIBE)
-*/
 
 use calamine::{open_workbook, DataType, Error, RangeDeserializerBuilder, Reader, Xlsx};
 use chrono::{Datelike, Local};
@@ -18,6 +8,7 @@ mod config;
 mod employee;
 mod formatprn;
 mod payment;
+mod writepay;
 
 pub fn get_envio_correlative() -> u32 {
     println!("Introduzca el 'Número de envío' actual");
@@ -35,8 +26,8 @@ pub fn get_month() -> u32 {
 }
 
 pub fn gen_files(month: u32, envio: u32) {
-    let mut config = config::Config::new(month, envio);
+    let config = config::Config::new(month, envio);
     let employees = employee::get_employees(&config).expect("Error leyendo empleados");
-    let pay = payment::Payment::new(&config, &employees);
-    pay.write_payments(&config, &employees).expect("No pude escribir los archivos");
+    let mut pay = payment::Payment::new(&config, &employees);
+    writepay::write_propina(&config, &mut pay).expect("No pude escribir el achivo pago de propinas");
 }

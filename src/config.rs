@@ -15,14 +15,15 @@ pub struct Config {
 
 #[derive(PartialEq, Serialize, Deserialize, Debug)]
 pub struct path {
-    planilla_fijos_dir: String,
-    planilla_eventuales_dir: String,
+    pub planilla_fijos_dir: String,
+    pub planilla_eventuales_dir: String,
+    pub pago_bac_dir: String,
     pub empleados_bac: String,
-    planilla_fijos: String,
-    planilla_eventuales: String,
-    pago_bac_salario: String,
-    pago_bac_propina: String,
-    pago_bac_viatico: String,
+    pub planilla_fijos: String,
+    pub planilla_eventuales: String,
+    pub pago_bac_salario: String,
+    pub pago_bac_propina: String,
+    pub pago_bac_viatico: String,
 }
 
 #[derive(PartialEq, Serialize, Deserialize, Debug)]
@@ -43,22 +44,22 @@ pub struct bac {
 pub struct excel {
     pub name: String,
     pub amount: String,
-    eventuales: eventuales,
-    fijos: fijos,
+    pub eventuales: eventuales,
+    pub fijos: fijos,
 }
 
 #[derive(PartialEq, Serialize, Deserialize, Debug)]
-struct eventuales {
-    fijos: String,
-    propina: String,
-    viaticos: String,
+pub struct eventuales {
+    pub fijos: String,
+    pub propina: String,
+    pub viaticos: String,
 }
 
 #[derive(PartialEq, Serialize, Deserialize, Debug)]
-struct fijos {
-    admin: String,
-    ops: String,
-    viaticos: String,
+pub struct fijos {
+    pub admin: String,
+    pub ops: String,
+    pub viaticos: String,
 }
 
 impl Config {
@@ -95,12 +96,15 @@ impl Config {
         c.bac.texto_propina = c.bac.texto_propina.replace("%%%", &c.month[idx]);
         c.path.planilla_fijos = c.path.planilla_fijos.replace("%%%", &c.month[idx]);
         c.path.planilla_fijos = c.path.planilla_fijos.replace("##", &ms);
+        c.path.planilla_eventuales = c.path.planilla_eventuales.replace("%%%", &c.month[idx]);
+        c.path.planilla_eventuales = c.path.planilla_eventuales.replace("##", &ms);
         c.bac.mes = ms.clone();
     }
 
     fn replace_envio_correlative(config: &mut Config, envio: u32) {
         let mut e = envio;
         let es = format!("{:0>5}", e);
+        config.bac.envio = es.clone();
         config.path.pago_bac_salario = config.path.pago_bac_salario.replace("#####", &es);
         config.bac.texto_salario = config.bac.texto_salario.replace("#####", &es);
         e += 1;
@@ -127,6 +131,7 @@ mod tests {
 
         assert_eq!("9679", c.bac.plan);
         assert_eq!("DEC", c.month[11]);
+        assert_eq!("00123", c.bac.envio);
         assert_eq!("PROPINA ENE", c.bac.texto_propina);
         assert_eq!("00123 pago BAC salario ENE.prn", c.path.pago_bac_salario);
         assert_eq!("00124 pago BAC viatico ENE.prn", c.path.pago_bac_viatico);

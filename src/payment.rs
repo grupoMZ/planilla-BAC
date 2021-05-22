@@ -34,6 +34,7 @@ impl Person {
         }
     }
 }
+
 impl Payment {
     pub fn new(config: &Config, employees: &Vec<Employee>) -> Payment {
         let persons: Vec<Person> = Vec::new();
@@ -116,14 +117,14 @@ impl Payment {
         total
     }
 
-    pub fn compute_payment_amount(&mut self, path: String, sheet: String) -> Result<(), Error> {
-        let mut workbook: Xlsx<_> = open_workbook(&path)?;
-        let errmsg = format!(
-            "La hoja {} no fue encontrada en el archivo {}",
+    pub fn compute_payment_amount(&mut self, path: &str, sheet: &String) -> Result<(), Error> {
+        println!("Intentando abrir el archivo: '{}'", path);
+        let mut workbook: Xlsx<_> = open_workbook(path).expect(format!("No {}", path).as_str());
+        println!("Buscando la hoja '{}' en el archivo '{}'",
             &sheet, &path
         );
         let mut range = workbook
-            .worksheet_range(&sheet)
+            .worksheet_range(sheet)
             .ok_or(Error::Msg("La hoja no fue encontrada"))??;
         for (i, row) in range.rows().enumerate() {
             let column = self.find_name_amount_columns(row);
@@ -137,13 +138,13 @@ impl Payment {
             }
         }
         for (i, row) in range.rows().enumerate() {
-            self.compute_persons_payment(row)?;
+            self.compute_persons_payment(row, i)?;
         }
 
         Ok(())
     }
 
-    fn compute_persons_payment(&mut self, row: &[DataType]) -> Result<(), Error> {
+    fn compute_persons_payment(&mut self, row: &[DataType], i: usize) -> Result<(), Error> {
         let col = &row[self.column.alias];
         if col.is_string() {
             let alias: String = col.to_string();
@@ -154,13 +155,23 @@ impl Payment {
                         let ff = f.get_float();
                         let n: u64 = match ff {
                             None => {
-                                return Err(Error::Msg("ABC"));
+                                return Err(Error::Msg("Celda vacía"));
                             }
                             Some(nn) => (nn * 100.0).round() as u64,
                         };
                         person.amount += n;
+                    } else if f.is_int() {
+                        let ff = f.get_int();
+                        let n: u64 = match ff {
+                            None => {
+                                return Err(Error::Msg("Celda vacia"));
+                            }
+                            Some(nn) => nn as u64,
+                        };
                     } else {
-                        return Err(Error::Msg("Not a float"));
+                        println!("Advertencia: Fila:{}; Columna:{}", i+1, self.column.amount);
+                        //return Err(Error::Msg("Contenido de la celda no es un número"));
+                        return Ok(());
                     }
                 }
                 //println!("{}: {}", k, col);
@@ -192,7 +203,6 @@ impl Payment {
     }
 }
 
-pub fn write_propina(payment: &mut Payment, employees: Vec<Employee>) {}
 
 #[cfg(test)]
 mod tests {
@@ -206,7 +216,6 @@ mod tests {
 
         payment.write_payments(&config, &employees);
     }
-
     #[test]
     fn new_payment() {
         let mut config = Config::new(1, 1);
@@ -224,10 +233,10 @@ mod tests {
     }
     #[test]
     fn get_pay() {
-        let path = "../Planilla_ISSS_y_AFP_2021/04 GMZ Planilla Operaciones ABR.xlsx".to_string();
+        let path = "../Planilla_ISSS_y_AFP_2021/04 GMZ Planilla Operaciones ABR.xlsx";
         let sheet = " Planilla Ops  1  al 31 ".to_string();
         let mut payment = Payment::new_test_payment();
-        let e = payment.compute_payment_amount(path, sheet).expect("ERROR");
+        let e = payment.compute_payment_amount(path, &sheet).expect("ERROR");
         //assert_matches!(e, u);
         assert_eq!(1, payment.column.alias);
         assert_eq!(22, payment.column.amount);

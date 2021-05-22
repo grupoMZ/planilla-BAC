@@ -18,7 +18,7 @@ pub fn get_employees(config: &Config) -> Result<Vec<Employee>, Error> {
     if let Some(s) = ps {
         return get_employees_from(s);
     } else {
-        return Err(Error::Msg("No pude encontrar el fichero de empleados"));
+        return Err(Error::Msg("No pude crear la ruta al archivo de empleados XXX"));
     }
 }
 
