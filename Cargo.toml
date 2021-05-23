@@ -1,5 +1,5 @@
 [package]
-name = "planilla-BAC"
+name = "planilla-bac"
 version = "0.1.0"
 authors = ["P. Zometa <zometa@anixet.com>"]
 edition = "2018"

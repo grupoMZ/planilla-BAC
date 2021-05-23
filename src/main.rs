@@ -1,7 +1,9 @@
-use planilla_BAC as pbac;
+use planilla_bac as pbac;
 
 fn main() {
-    let envio = pbac::get_envio_correlative();
+    pbac::print_version();
+
     let month = pbac::get_month();
+    let envio = pbac::get_envio_correlative();
     pbac::gen_files(month, envio);
 }

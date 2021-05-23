@@ -137,7 +137,7 @@ impl Payment {
                             Some(nn) => nn as u64,
                         };
                     } else {
-                        println!("Advertencia: Fila:{}; Columna:{}", i+1, self.column.amount);
+                        //println!("Advertencia: Fila:{}; Columna:{}", i+1, self.column.amount);
                         //return Err(Error::Msg("Contenido de la celda no es un número"));
                         return Ok(());
                     }
