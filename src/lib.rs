@@ -1,5 +1,5 @@
 use chrono::{Datelike, Local};
-use text_io::try_read;
+use text_io::{read, try_read};
 
 mod config;
 mod employee;
@@ -119,4 +119,11 @@ pub fn gen_files(month: u32, envio: u32) {
     let mut pay = payment::Payment::new(&config, &employees);
     writepay::write_propina(&config, &employees, &mut pay)
         .expect("No pude escribir el achivo pago de propinas");
+}
+
+pub fn wait_for_user() {
+    println!("");
+    println!("Programa ejecutado correctamente");
+    println!("Presione Enter para cerrar esta ventana");
+    let _: String = read!("{}\r\n");
 }

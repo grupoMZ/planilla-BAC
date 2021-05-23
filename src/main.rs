@@ -6,4 +6,5 @@ fn main() {
     let month = pbac::get_month();
     let envio = pbac::get_envio_correlative();
     pbac::gen_files(month, envio);
+    pbac::wait_for_user();
 }

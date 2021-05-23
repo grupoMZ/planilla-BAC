@@ -112,7 +112,7 @@ impl Payment {
         Ok(())
     }
 
-    fn compute_persons_payment(&mut self, row: &[DataType], i: usize) -> Result<(), Error> {
+    fn compute_persons_payment(&mut self, row: &[DataType], _i: usize) -> Result<(), Error> {
         let col = &row[self.column.alias];
         if col.is_string() {
             let alias: String = col.to_string();
@@ -137,7 +137,7 @@ impl Payment {
                             Some(nn) => nn as u64,
                         };
                     } else {
-                        //println!("Advertencia: Fila:{}; Columna:{}", i+1, self.column.amount);
+                        //println!("Advertencia: Fila:{}; Columna:{}", _i+1, self.column.amount);
                         //return Err(Error::Msg("Contenido de la celda no es un número"));
                         return Ok(());
                     }
