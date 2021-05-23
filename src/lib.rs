@@ -1,7 +1,4 @@
-
-use calamine::{open_workbook, DataType, Error, RangeDeserializerBuilder, Reader, Xlsx};
 use chrono::{Datelike, Local};
-use serde::{Deserialize, Serialize};
 use text_io::read;
 
 mod config;
@@ -29,5 +26,12 @@ pub fn gen_files(month: u32, envio: u32) {
     let config = config::Config::new(month, envio);
     let employees = employee::get_employees(&config).expect("Error leyendo empleados");
     let mut pay = payment::Payment::new(&config, &employees);
-    writepay::write_propina(&config, &mut pay).expect("No pude escribir el achivo pago de propinas");
+    writepay::write_salario(&config, &employees, &mut pay)
+        .expect("No pude escribir el achivo pago de propinas");
+    let mut pay = payment::Payment::new(&config, &employees);
+    writepay::write_viatico(&config, &employees, &mut pay)
+        .expect("No pude escribir el achivo pago de propinas");
+    let mut pay = payment::Payment::new(&config, &employees);
+    writepay::write_propina(&config, &employees, &mut pay)
+        .expect("No pude escribir el achivo pago de propinas");
 }

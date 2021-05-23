@@ -15,8 +15,8 @@
         "amount": "RECIB",
         "eventuales": {
             "fijos": "Planilla fija operaciones  ",
-            "propina": "Propina Bar y Cocina  ",
-            "viaticos": "Viaticos Ops  "
+            "ops": "Planilla operaciones ",
+            "propina": "Propina Bar y Cocina  "
         },
         "fijos": {
             "admin": "Planilla Admin",
@@ -31,7 +31,7 @@
         "dia_pago": "30",
         "plan": "9679",
         "mes": "00",
-        "envio": "00000",
+        "envio": 0,
         "batch": "B",
         "trans": "T",
         "colwidth": [
@@ -48,7 +48,8 @@
             30,
             1,
             30,
-            9
+            9,
+            2
         ]
     },
     "month": [

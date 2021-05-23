@@ -1,14 +1,13 @@
 use std::collections::HashMap;
-use std::fs;
 
-use calamine::{open_workbook, DataType, Error, RangeDeserializerBuilder, Reader, Xlsx};
+use calamine::{open_workbook, DataType, Error, Reader, Xlsx};
 
 use crate::config::Config;
-use crate::employee::{get_employees, Employee};
+use crate::employee::Employee;
 
 pub struct Payment {
     pub persons: HashMap<String, u64>,
-    date: String,
+    pub date: String,
     column: Column,
     text: Text,
 }
@@ -52,23 +51,14 @@ impl Payment {
         }
     }
 
-    pub fn write_payments(
-        &self,
-        config: &Config,
-        employees: &Vec<Employee>,
-    ) -> std::io::Result<()> {
-        let text = format!("{}", 0);
-        let path = String::from(""); // TODO: compute the path
-        fs::write(path, text)
-    }
-
+    #[cfg(test)]
     pub fn new_test_payment() -> Payment {
         let mut persons = HashMap::new();
         persons.insert("Maria Jose".to_string(), 123456 as u64);
         persons.insert("Siria".to_string(), 7890 as u64);
         let payment = Payment {
             persons,
-            date: String::from("20210519"),
+            date: String::from("20210530"),
             column: Column {
                 alias: 255,
                 amount: 255,
@@ -85,7 +75,7 @@ impl Payment {
     pub fn get_total_payment(&self) -> u64 {
         let mut total = 0;
 
-        for (alias, amount ) in self.persons.iter() {
+        for (_alias, amount ) in self.persons.iter() {
             total += amount;
         }
         total
@@ -101,10 +91,10 @@ impl Payment {
         println!("Buscando la hoja '{}' en el archivo '{}'",
             &sheet, &path
         );
-        let mut range = workbook
+        let range = workbook
             .worksheet_range(sheet)
             .ok_or(Error::Msg("La hoja no fue encontrada"))??;
-        for (i, row) in range.rows().enumerate() {
+        for (_i, row) in range.rows().enumerate() {
             let column = self.find_name_amount_columns(row);
             match column {
                 None => continue,
@@ -140,7 +130,7 @@ impl Payment {
                         *amount += n;
                     } else if f.is_int() {
                         let ff = f.get_int();
-                        let n: u64 = match ff {
+                        match ff {
                             None => {
                                 return Err(Error::Msg("Celda vacia"));
                             }
@@ -185,24 +175,14 @@ impl Payment {
 #[cfg(test)]
 mod tests {
     use super::*;
-    #[test]
-    fn write_file() {
-        let config = Config::new(1, 0);
-        let path = "./src/00000 Pago BAC Propina ENE.prn".to_string();
-        let mut payment = Payment::new_test_payment();
-        let employees = get_employees(&config).expect("Error opening employees");
-
-        payment.write_payments(&config, &employees);
-    }
+    use crate::employee::get_employees;
     #[test]
     fn new_payment() {
-        let mut config = Config::new(1, 1);
+        let config = Config::new(1, 1);
         let employees = get_employees(&config).expect("Error leyendo empleados");
         let payment = Payment::new(&config, &employees);
-        let p0 = &payment.persons["Silvia"];
         let e0 = &employees[0];
         let last = employees.len() - 1;
-        let pl = &payment.persons["Esahu"];
         let el = &employees[last];
         assert_eq!(0, payment.persons[&e0.alias]);
         assert_eq!(0, payment.persons[&el.alias]);
@@ -212,7 +192,7 @@ mod tests {
         let path = "../Planilla_ISSS_y_AFP_2021/04 GMZ Planilla Operaciones ABR.xlsx";
         let sheet = " Planilla Ops  1  al 31 ".to_string();
         let mut payment = Payment::new_test_payment();
-        let e = payment.compute_payment_amount(path, &sheet).expect("ERROR");
+        payment.compute_payment_amount(path, &sheet).expect("ERROR");
         //assert_matches!(e, u);
         assert_eq!(1, payment.column.alias);
         assert_eq!(22, payment.column.amount);
@@ -222,14 +202,14 @@ mod tests {
 
     #[test]
     fn total_payment() {
-        let mut payment = Payment::new_test_payment();
+        let payment = Payment::new_test_payment();
         let d = payment.get_total_payment();
         assert_eq!(131346, d);
     }
 
     #[test]
     fn total_transactions() {
-        let mut payment = Payment::new_test_payment();
+        let payment = Payment::new_test_payment();
         let d = payment.get_total_transactions();
         assert_eq!(2, d);
     }

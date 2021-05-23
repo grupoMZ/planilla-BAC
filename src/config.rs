@@ -7,14 +7,14 @@ use std::io::BufReader;
 
 #[derive(PartialEq, Serialize, Deserialize, Debug)]
 pub struct Config {
-    pub path: path,
-    pub bac: bac,
-    pub excel: excel,
+    pub path: Path,
+    pub bac: BAC,
+    pub excel: Excel,
     pub month: Vec<String>,
 }
 
 #[derive(PartialEq, Serialize, Deserialize, Debug)]
-pub struct path {
+pub struct Path {
     pub planilla_fijos_dir: String,
     pub planilla_eventuales_dir: String,
     pub pago_bac_dir: String,
@@ -27,13 +27,13 @@ pub struct path {
 }
 
 #[derive(PartialEq, Serialize, Deserialize, Debug)]
-pub struct bac {
+pub struct BAC {
     pub batch: String,
     pub trans: String,
     pub plan: String,
-    pub envio: String,
     pub mes: String,
-    pub colwidth: Vec<u8>,
+    pub envio: u32,
+    pub colwidth: Vec<usize>,
     pub texto_salario: String,
     pub texto_propina: String,
     pub texto_viatico: String,
@@ -41,32 +41,33 @@ pub struct bac {
 }
 
 #[derive(PartialEq, Serialize, Deserialize, Debug)]
-pub struct excel {
+pub struct Excel {
     pub name: String,
     pub amount: String,
-    pub eventuales: eventuales,
-    pub fijos: fijos,
+    pub eventuales: Eventuales,
+    pub fijos: Fijos,
 }
 
 #[derive(PartialEq, Serialize, Deserialize, Debug)]
-pub struct eventuales {
+pub struct Eventuales {
     pub fijos: String,
+    pub ops: String,
     pub propina: String,
-    pub viaticos: String,
 }
 
 #[derive(PartialEq, Serialize, Deserialize, Debug)]
-pub struct fijos {
+pub struct Fijos {
     pub admin: String,
     pub ops: String,
     pub viaticos: String,
 }
 
+
 impl Config {
     pub fn new(month: u32, envio: u32) -> Config {
         let mut c = Config::get_config().expect("Error en el archivo de configuración.");
-        Config::replace_month(&mut c, month);
-        Config::replace_envio_correlative(&mut c, envio);
+        c.replace_month(month);
+        c.replace_envio_correlative(envio);
         c
     }
 
@@ -87,36 +88,46 @@ impl Config {
         Ok(c)
     }
 
-    fn replace_month(c: &mut Config, month: u32) {
+    fn replace_month(&mut self, month: u32) {
         let ms = format!("{:0>2}", month);
         let idx = (month as usize) - 1;
-        c.path.pago_bac_salario = c.path.pago_bac_salario.replace("%%%", &c.month[idx]);
-        c.path.pago_bac_viatico = c.path.pago_bac_viatico.replace("%%%", &c.month[idx]);
-        c.path.pago_bac_propina = c.path.pago_bac_propina.replace("%%%", &c.month[idx]);
-        c.bac.texto_propina = c.bac.texto_propina.replace("%%%", &c.month[idx]);
-        c.path.planilla_fijos = c.path.planilla_fijos.replace("%%%", &c.month[idx]);
-        c.path.planilla_fijos = c.path.planilla_fijos.replace("##", &ms);
-        c.path.planilla_eventuales = c.path.planilla_eventuales.replace("%%%", &c.month[idx]);
-        c.path.planilla_eventuales = c.path.planilla_eventuales.replace("##", &ms);
-        c.bac.mes = ms.clone();
+        self.path.pago_bac_salario = self.path.pago_bac_salario.replace("%%%", &self.month[idx]);
+        self.path.pago_bac_viatico = self.path.pago_bac_viatico.replace("%%%", &self.month[idx]);
+        self.path.pago_bac_propina = self.path.pago_bac_propina.replace("%%%", &self.month[idx]);
+        self.bac.texto_salario = self.bac.texto_salario.replace("%%%", &self.month[idx]);
+        self.bac.texto_viatico = self.bac.texto_viatico.replace("%%%", &self.month[idx]);
+        self.bac.texto_propina = self.bac.texto_propina.replace("%%%", &self.month[idx]);
+        self.path.planilla_fijos = self.path.planilla_fijos.replace("%%%", &self.month[idx]);
+        self.path.planilla_fijos = self.path.planilla_fijos.replace("##", &ms);
+        self.path.planilla_eventuales = self.path.planilla_eventuales.replace("%%%", &self.month[idx]);
+        self.path.planilla_eventuales = self.path.planilla_eventuales.replace("##", &ms);
+        self.bac.mes = ms.clone();
     }
 
-    fn replace_envio_correlative(config: &mut Config, envio: u32) {
-        let mut e = envio;
-        let es = format!("{:0>5}", e);
-        config.bac.envio = es.clone();
-        config.path.pago_bac_salario = config.path.pago_bac_salario.replace("#####", &es);
-        config.bac.texto_salario = config.bac.texto_salario.replace("#####", &es);
-        e += 1;
-        let es = format!("{:0>5}", e);
-        config.path.pago_bac_viatico = config.path.pago_bac_viatico.replace("#####", &es);
-        config.bac.texto_viatico = config.bac.texto_viatico.replace("#####", &es);
-        e += 1;
-        let es = format!("{:0>5}", e);
-        config.path.pago_bac_propina = config.path.pago_bac_propina.replace("#####", &es);
-        config.bac.texto_propina = config.bac.texto_propina.replace("#####", &es);
+    fn replace_envio_correlative(&mut self, envio: u32) {
+        self.bac.envio = envio;
+        let es = self.get_envio_salario();
+        self.path.pago_bac_salario = self.path.pago_bac_salario.replace("#####", &es);
+        self.bac.texto_salario = self.bac.texto_salario.replace("#####", &es);
+        let es = self.get_envio_viatico();
+        self.path.pago_bac_viatico = self.path.pago_bac_viatico.replace("#####", &es);
+        self.bac.texto_viatico = self.bac.texto_viatico.replace("#####", &es);
+        let es = self.get_envio_propina();
+        self.path.pago_bac_propina = self.path.pago_bac_propina.replace("#####", &es);
+        self.bac.texto_propina = self.bac.texto_propina.replace("#####", &es);
     }
 
+    pub fn get_envio_salario(&self) -> String {
+        format!("{:0>5}", self.bac.envio)
+    }
+
+    pub fn get_envio_viatico(&self) -> String {
+        format!("{:0>5}", self.bac.envio+1)
+    }
+
+    pub fn get_envio_propina(&self) -> String {
+        format!("{:0>5}", self.bac.envio+2)
+    }
 }
 
 
@@ -131,7 +142,6 @@ mod tests {
 
         assert_eq!("9679", c.bac.plan);
         assert_eq!("DEC", c.month[11]);
-        assert_eq!("00123", c.bac.envio);
         assert_eq!("PROPINA ENE", c.bac.texto_propina);
         assert_eq!("00123 pago BAC salario ENE.prn", c.path.pago_bac_salario);
         assert_eq!("00124 pago BAC viatico ENE.prn", c.path.pago_bac_viatico);
@@ -139,4 +149,12 @@ mod tests {
         assert_eq!("01 GMZ Planilla Operaciones ENE.xlsx", c.path.planilla_fijos);
     }
 
+    #[test]
+    fn get_envio() {
+        let c = Config::new(1, 123);
+
+        assert_eq!("00123", c.get_envio_salario());
+        assert_eq!("00124", c.get_envio_viatico());
+        assert_eq!("00125", c.get_envio_propina());
+    }
 }

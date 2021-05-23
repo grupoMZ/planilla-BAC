@@ -1,6 +1,6 @@
 use std::path::{PathBuf};
 
-use calamine::{open_workbook, DataType, Error, RangeDeserializerBuilder, Reader, Xlsx};
+use calamine::{open_workbook, Error, RangeDeserializerBuilder, Reader, Xlsx};
 use serde::{Deserialize, Serialize};
 use crate::config::Config;
 
@@ -13,7 +13,7 @@ pub struct Employee {
 }
 
 pub fn get_employees(config: &Config) -> Result<Vec<Employee>, Error> {
-    let mut path = PathBuf::from(config.path.empleados_bac.as_str());
+    let path = PathBuf::from(config.path.empleados_bac.as_str());
     let ps = path.as_path().to_str();
     if let Some(s) = ps {
         return get_employees_from(s);
@@ -24,11 +24,11 @@ pub fn get_employees(config: &Config) -> Result<Vec<Employee>, Error> {
 
 fn get_employees_from(path: &str) -> Result<Vec<Employee>, Error> {
     let mut workbook: Xlsx<_> = open_workbook(path)?;
-    let mut range = workbook
+    let range = workbook
         .worksheet_range("data")
         .ok_or(Error::Msg("No puedo encontrar la hoja 'data'"))??;
     let columns = ["nit", "nombre", "cuenta", "alias"];
-    let mut iter_result =
+    let iter_result =
         RangeDeserializerBuilder::with_headers(&columns).from_range::<_, Employee>(&range)?;
     let mut res: Vec<Employee> = Vec::new();
     for result in iter_result {
@@ -37,7 +37,7 @@ fn get_employees_from(path: &str) -> Result<Vec<Employee>, Error> {
     /*     for v in res.iter() {
         println!("{:?}", v);
     } */
-    Ok((res))
+    Ok(res)
 }
 
 #[cfg(test)]
