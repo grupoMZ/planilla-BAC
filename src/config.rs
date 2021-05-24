@@ -3,7 +3,31 @@ use serde::{Deserialize, Serialize};
 use std::error::Error;
 use std::fs::File;
 use std::io::BufReader;
+use calamine::{XlsxError, DeError};
+use thiserror::Error;
 
+const CONFIG_FNAME: &'static str = "config.json";
+#[derive(Error, Debug)]
+pub enum ConfigError {
+    #[error("{err:#?} \r\nEl archivo {path:?} no fue encontrado.")]
+    FileNameError {err: std::io::Error, path: String},
+    #[error("{err:#?} \r\nEl archivo {path:?} no fue encontrado.")]
+    ExcelFileError {err: XlsxError, path: String},
+    #[error("La hoja {sheet:?} no fue encontrada en el archivo {fname:?}.")]
+    ExcelSheetError {sheet: String, fname: String},
+    #[error("{err:#?} \r\nLa hoja {sheet:?} en el archivo {fname:?} no pudo ser analizada.")]
+    ExcelParseError {err: DeError, sheet: String, fname: String},
+    #[error("La ruta {path:?} no es valida.")]
+    PathError {path: String},
+    #[error("{err:#?} \r\nEl archivo {path:?} no pudo ser analizado.")]
+    ParseError {err: serde_json::Error, path: String},
+    #[error("Error en la celda (fila: {row:?}, columna: {col:?}).")]
+    ExcelCellError {row: usize, col: usize},
+    #[error(transparent)]
+    IOError(#[from] std::io::Error),
+    #[error("Closing")]
+    EndError
+}
 #[derive(PartialEq, Serialize, Deserialize, Debug)]
 pub struct Config {
     pub path: Path,
@@ -63,20 +87,21 @@ pub struct Fijos {
 
 
 impl Config {
-    pub fn new(date: String, envio: u32) -> Config {
-        let mut c = Config::get_config().expect("Error en el archivo de configuración.");
+    pub fn new(date: String, envio: u32) -> Result<Config, ConfigError> {
+        let mut c = Config::get_config()?;
         c.bac.date = date;
         c.replace_month();
         c.replace_envio_correlative(envio);
-        c
+        Ok(c)
     }
 
-    fn get_config() -> Result<Config, Box<dyn Error>> {
-        let path = "config.json";
-        let file = File::open(path)?;
+    fn get_config() -> Result<Config, ConfigError> {
+        let path = CONFIG_FNAME.to_string();
+        let file = File::open(&path).map_err(|err| ConfigError::FileNameError {err, path})?;
         let reader = BufReader::new(file);
 
-        let c = serde_json::from_reader(reader)?;
+        let c = serde_json::from_reader(reader).map_err(|err| 
+        ConfigError::ParseError { err, path: CONFIG_FNAME.to_string() })?;
 
         Ok(c)
     }
@@ -132,7 +157,7 @@ mod tests {
     use super::*;
     #[test]
     fn get_cfg() {
-        let c = Config::new("20200101".to_string(), 123);
+        let c = Config::new("20200101".to_string(), 123).unwrap();
 
         assert_eq!("9679", c.bac.plan);
         assert_eq!("DEC", c.month[11]);
@@ -145,7 +170,7 @@ mod tests {
 
     #[test]
     fn get_envio() {
-        let c = Config::new("20200101".to_string(), 123);
+        let c = Config::new("20200101".to_string(), 123).unwrap();
 
         assert_eq!("00123", c.get_envio_salario());
         assert_eq!("00124", c.get_envio_viatico());

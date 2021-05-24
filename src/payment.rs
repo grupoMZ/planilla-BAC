@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use calamine::{open_workbook, DataType, Error, Reader, Xlsx};
 
-use crate::config::Config;
+use crate::config::{Config, ConfigError};
 use crate::employee::Employee;
 
 pub struct Payment {
@@ -85,15 +85,23 @@ impl Payment {
         self.persons.len() as u64
     }
 
-    pub fn compute_payment_amount(&mut self, path: &str, sheet: &String) -> Result<(), Error> {
-        println!("Intentando abrir el archivo: '{}'", path);
-        let mut workbook: Xlsx<_> = open_workbook(path).expect(format!("No {}", path).as_str());
-        println!("Buscando la hoja '{}' en el archivo '{}'",
-            &sheet, &path
-        );
+    pub fn compute_payment_amount(&mut self, xlpath: &str, psheet: &String) -> Result<(), ConfigError> {
+        let path = String::from(xlpath);
+        let mut workbook: Xlsx<_> = open_workbook(xlpath)
+    .map_err(|err| ConfigError::ExcelFileError { err, path })?;
+
+    let name = psheet.as_str();
+    let sheet = psheet.clone();
+    let fname = String::from(xlpath);
+
         let range = workbook
-            .worksheet_range(sheet)
-            .ok_or(Error::Msg("La hoja no fue encontrada"))??;
+            .worksheet_range(&name)
+        .ok_or_else(|| ConfigError::ExcelSheetError { sheet, fname })?
+        .map_err(|err| ConfigError::ExcelFileError {
+            err,
+            path: String::from(xlpath),
+        })?;
+
         for (_i, row) in range.rows().enumerate() {
             let column = self.find_name_amount_columns(row);
             match column {
@@ -112,7 +120,7 @@ impl Payment {
         Ok(())
     }
 
-    fn compute_persons_payment(&mut self, row: &[DataType], _i: usize) -> Result<(), Error> {
+    fn compute_persons_payment(&mut self, row: &[DataType], i: usize) -> Result<(), ConfigError> {
         let col = &row[self.column.alias];
         if col.is_string() {
             let alias: String = col.to_string();
@@ -123,7 +131,7 @@ impl Payment {
                         let ff = f.get_float();
                         let n: u64 = match ff {
                             None => {
-                                return Err(Error::Msg("Celda vacía"));
+                                return Err(ConfigError::ExcelCellError { row: i, col: self.column.amount});
                             }
                             Some(nn) => (nn * 100.0).round() as u64,
                         };
@@ -132,7 +140,7 @@ impl Payment {
                         let ff = f.get_int();
                         match ff {
                             None => {
-                                return Err(Error::Msg("Celda vacia"));
+                                return Err(ConfigError::ExcelCellError { row: i, col: self.column.amount});
                             }
                             Some(nn) => nn as u64,
                         };
@@ -178,7 +186,7 @@ mod tests {
     use crate::employee::get_employees;
     #[test]
     fn new_payment() {
-        let config = Config::new("20200131".to_string(), 1);
+        let config = Config::new("20200131".to_string(), 1).unwrap();
         let employees = get_employees(&config).expect("Error leyendo empleados");
         let payment = Payment::new(&config, &employees);
         let e0 = &employees[0];

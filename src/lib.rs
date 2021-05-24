@@ -1,6 +1,7 @@
 use chrono::prelude::*;
 use chrono::{Datelike, Local};
 
+use config::ConfigError;
 use read_input::prelude::*;
 
 mod config;
@@ -124,29 +125,21 @@ pub fn get_date() -> String {
 
 pub fn get_envio_correlative() -> u32 {
     println!("");
-    println!("Introduzca el 'Número de envío' actual,");
-    println!("según la aplicación de planilla en línea BAC:");
-    let envio: u32 = input().get();
+    let envio: u32 = input()
+    .repeat_msg("Introduzca el 'Número de envío' actual,\r\nsegún la aplicación de planilla en línea BAC:")
+    .inside_err(1..=99999, "ERROR: Introduzca un valor entre 1 y 99999")
+    .default(1)
+    .get();
+
+    println!("");
+    println!("El número de envio a usar es {}", envio);
+    println!("");
     envio
 }
 
-pub fn get_month() -> u32 {
-    let now = Local::today();
-    println!("Hoy es {:?}", now);
-    let mut month = Date::new(now.month() as usize);
-    println!("");
-    month.print_current();
-    let num = input()
-        .msg("Introduzca el número del mes deseado (1=Enero, 12=Diciembre, etc.)")
-        .default(month.value)
-        .get();
-
-    month.value as u32
-}
-
-pub fn gen_files(date: String, envio: u32) {
-    let config = config::Config::new(date, envio);
-    let employees = employee::get_employees(&config).expect("Error leyendo empleados");
+pub fn gen_files(date: String, envio: u32) -> Result<(), ConfigError> {
+    let config = config::Config::new(date, envio)?;
+    let employees = employee::get_employees(&config)?;
     let mut pay = payment::Payment::new(&config, &employees);
     writepay::write_salario(&config, &employees, &mut pay)
         .expect("No pude escribir el achivo pago de propinas");
@@ -156,10 +149,20 @@ pub fn gen_files(date: String, envio: u32) {
     let mut pay = payment::Payment::new(&config, &employees);
     writepay::write_propina(&config, &employees, &mut pay)
         .expect("No pude escribir el achivo pago de propinas");
+    Ok(())
 }
 
-pub fn wait_for_user() {
+pub fn display_error(error: String) -> Result<(), ConfigError> {
+    println!("");
+    println!("--- ERROR --- \r\n{}", error);
+    println!("");
+    let _: String = input().msg("Presione Enter para cerrar esta ventana").get();
+    return Err(ConfigError::EndError);
+}
+
+pub fn display_success() -> Result<(), ConfigError> {
     println!("");
     println!("Programa ejecutado correctamente");
     let _: String = input().msg("Presione Enter para cerrar esta ventana").get();
+    Ok(())
 }

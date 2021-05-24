@@ -1,8 +1,8 @@
-use std::path::{PathBuf};
+use std::path::PathBuf;
 
+use crate::config::{Config, ConfigError};
 use calamine::{open_workbook, Error, RangeDeserializerBuilder, Reader, Xlsx};
 use serde::{Deserialize, Serialize};
-use crate::config::Config;
 
 #[derive(PartialEq, Serialize, Deserialize, Debug)]
 pub struct Employee {
@@ -12,31 +12,45 @@ pub struct Employee {
     pub alias: String,
 }
 
-pub fn get_employees(config: &Config) -> Result<Vec<Employee>, Error> {
-    let path = PathBuf::from(config.path.empleados_bac.as_str());
-    let ps = path.as_path().to_str();
-    if let Some(s) = ps {
-        return get_employees_from(s);
-    } else {
-        return Err(Error::Msg("No pude crear la ruta al archivo de empleados XXX"));
-    }
+pub fn get_employees(config: &Config) -> Result<Vec<Employee>, ConfigError> {
+    let path = config.path.empleados_bac.clone();
+    let pbuf = PathBuf::from(config.path.empleados_bac.as_str());
+    let xlpath = pbuf
+        .as_path()
+        .to_str()
+        .ok_or_else(|| ConfigError::PathError { path })?;
+    return get_employees_from(xlpath);
 }
 
-fn get_employees_from(path: &str) -> Result<Vec<Employee>, Error> {
-    let mut workbook: Xlsx<_> = open_workbook(path)?;
+fn get_employees_from(xlpath: &str) -> Result<Vec<Employee>, ConfigError> {
+    let path = String::from(xlpath);
+    let mut workbook: Xlsx<_> = open_workbook(xlpath)
+    .map_err(|err| ConfigError::ExcelFileError { err, path })?;
+    let name = "data";
+    let sheet = String::from(name);
+    let fname = String::from(xlpath);
     let range = workbook
         .worksheet_range("data")
-        .ok_or(Error::Msg("No puedo encontrar la hoja 'data'"))??;
+        .ok_or_else(|| ConfigError::ExcelSheetError { sheet, fname })?
+        .map_err(|err| ConfigError::ExcelFileError {
+            err,
+            path: String::from(xlpath),
+        })?;
+
+    let sheet = String::from(name);
+    let fname = String::from(xlpath);
     let columns = ["nit", "nombre", "cuenta", "alias"];
-    let iter_result =
-        RangeDeserializerBuilder::with_headers(&columns).from_range::<_, Employee>(&range)?;
+    let iter_result = RangeDeserializerBuilder::with_headers(&columns)
+        .from_range::<_, Employee>(&range)
+        .map_err(|err| ConfigError::ExcelParseError { err, sheet, fname })?;
+
     let mut res: Vec<Employee> = Vec::new();
     for result in iter_result {
-        res.push(result?);
+        let sheet = String::from(name);
+        let fname = String::from(xlpath);
+        let employee = result.map_err(|err| ConfigError::ExcelParseError { err, sheet, fname })?;
+        res.push(employee);
     }
-    /*     for v in res.iter() {
-        println!("{:?}", v);
-    } */
     Ok(res)
 }
 
