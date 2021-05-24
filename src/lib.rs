@@ -128,7 +128,7 @@ pub fn get_envio_correlative() -> u32 {
     let envio: u32 = input()
     .repeat_msg("Introduzca el 'Número de envío' actual,\r\nsegún la aplicación de planilla en línea BAC:")
     .inside_err(1..=99999, "ERROR: Introduzca un valor entre 1 y 99999")
-    .default(1)
+    //.default(1)  use this for tests
     .get();
 
     println!("");
@@ -141,14 +141,11 @@ pub fn gen_files(date: String, envio: u32) -> Result<(), ConfigError> {
     let config = config::Config::new(date, envio)?;
     let employees = employee::get_employees(&config)?;
     let mut pay = payment::Payment::new(&config, &employees);
-    writepay::write_salario(&config, &employees, &mut pay)
-        .expect("No pude escribir el achivo pago de propinas");
+    writepay::write_salario(&config, &employees, &mut pay)?;
     let mut pay = payment::Payment::new(&config, &employees);
-    writepay::write_viatico(&config, &employees, &mut pay)
-        .expect("No pude escribir el achivo pago de propinas");
+    writepay::write_viatico(&config, &employees, &mut pay)?;
     let mut pay = payment::Payment::new(&config, &employees);
-    writepay::write_propina(&config, &employees, &mut pay)
-        .expect("No pude escribir el achivo pago de propinas");
+    writepay::write_propina(&config, &employees, &mut pay)?;
     Ok(())
 }
 
