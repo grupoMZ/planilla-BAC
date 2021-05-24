@@ -73,7 +73,7 @@ pub fn get_date() -> String {
             date.day()
         );
         let usetoday = input()
-            .msg("Desea usar esa fecha [Y/n]")
+            .msg("Desea usar esa fecha [Y/n]? ")
             .default("Y".to_string())
             .get();
 
@@ -86,7 +86,7 @@ pub fn get_date() -> String {
                     "Presione Intro para usar el año actual o introduzca un año diferente: ",
                 )
                 .default(date.year())
-                .inside_err(2000..=2100, "ERROR: Introduzca un valor entre 2000 y 2100")
+                .inside_err(2000..=2100, "[ERROR] Introduzca un valor entre 2000 y 2100")
                 .get();
             date = date.with_year(year).expect("Año inválido");
 
@@ -96,7 +96,7 @@ pub fn get_date() -> String {
                     "Presione Intro para usar el mes actual o introduzca un mes diferente: ",
                 )
                 .default(date.month())
-                .inside_err(1..=12, "ERROR: Introduzca un valor entre 1 y 12")
+                .inside_err(1..=12, "[ERROR] Introduzca un valor entre 1 y 12")
                 .get();
             date = date.with_month(month).expect("Mes inválido");
 
@@ -106,7 +106,7 @@ pub fn get_date() -> String {
                     "Presione Intro para usar el día de hoy o introduzca un día diferente: ",
                 )
                 .default(date.day())
-                .inside_err(1..=31, "ERROR: Introduzca un valor entre 1 y 31")
+                .inside_err(1..=31, "[ERROR] Introduzca un valor entre 1 y 31")
                 .get();
             date = date.with_day(day).expect("Día inválido");
         }
@@ -126,8 +126,9 @@ pub fn get_date() -> String {
 pub fn get_envio_correlative() -> u32 {
     println!("");
     let envio: u32 = input()
-    .repeat_msg("Introduzca el 'Número de envío' actual,\r\nsegún la aplicación de planilla en línea BAC:")
-    .inside_err(1..=99999, "ERROR: Introduzca un valor entre 1 y 99999")
+    .repeat_msg("Introduzca el 'Número de envío' actual,\r\nsegún la aplicación de planilla en línea BAC: ")
+    .inside_err(1..=99999, "[ERROR] Introduzca un valor entre 1 y 99999\r\n")
+    .err("[ERROR] Introduzca un valor numérico entre 1 y 99999\r\n")
     //.default(1)  use this for tests
     .get();
 
@@ -151,7 +152,7 @@ pub fn gen_files(date: String, envio: u32) -> Result<(), ConfigError> {
 
 pub fn display_error(error: String) -> Result<(), ConfigError> {
     println!("");
-    println!("--- ERROR --- \r\n{}", error);
+    println!("[ERROR] El programa no fue ejecutado correctamente. \r\n{}", error);
     println!("");
     let _: String = input().msg("Presione Enter para cerrar esta ventana").get();
     return Err(ConfigError::EndError);
@@ -159,7 +160,7 @@ pub fn display_error(error: String) -> Result<(), ConfigError> {
 
 pub fn display_success() -> Result<(), ConfigError> {
     println!("");
-    println!("Programa ejecutado correctamente");
+    println!("[INFO] Programa ejecutado correctamente");
     let _: String = input().msg("Presione Enter para cerrar esta ventana").get();
     Ok(())
 }

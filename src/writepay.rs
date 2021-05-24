@@ -69,6 +69,7 @@ pub fn write_salario(config: &Config, employees: &Vec<Employee>, payment: &mut P
     let prnpath = pathbuf.as_path().to_str()
         .ok_or_else(|| ConfigError::PathError { path })?;
     fs::write(prnpath, contents)?;
+    println!("[INFO] Se escribió con éxito el archivo '{}' ", prnpath);
     Ok(())
 }
 
@@ -93,6 +94,7 @@ pub fn write_viatico(config: &Config, employees: &Vec<Employee>, payment: &mut P
     let prnpath = pathbuf.as_path().to_str()
         .ok_or_else(|| ConfigError::PathError { path })?;
     fs::write(prnpath, contents)?;
+    println!("[INFO] Se escribió con éxito el archivo '{}' ", prnpath);
     Ok(())
 }
 
@@ -118,6 +120,7 @@ pub fn write_propina(config: &Config, employees: &Vec<Employee>, payment: &mut P
         .ok_or_else(|| ConfigError::PathError { path })?;
 
     fs::write(prnpath, contents)?;
+    println!("[INFO] Se escribió con éxito el archivo '{}' ", prnpath);
     Ok(())
 }
 
