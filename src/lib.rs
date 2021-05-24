@@ -1,5 +1,7 @@
+use chrono::prelude::*;
 use chrono::{Datelike, Local};
-use text_io::{read, try_read};
+
+use read_input::prelude::*;
 
 mod config;
 mod employee;
@@ -24,15 +26,15 @@ const MONTHS: &[&str] = &[
     "NOVIEMBRE",
     "DICIEMBRE",
 ];
-pub struct Month {
+pub struct Date {
     value: usize,
     string: String,
 }
 
-impl Month {
-    pub fn new(value: usize) -> Month {
+impl Date {
+    pub fn new(value: usize) -> Date {
         let string = MONTHS[value].to_string();
-        Month { value, string }
+        Date { value, string }
     }
 
     pub fn update(&mut self, value: usize) {
@@ -60,55 +62,90 @@ pub fn print_version() {
     println!("");
 }
 
-pub fn get_envio_correlative() -> u32 {
+pub fn get_date() -> String {
+    let mut date = Local::today();
     loop {
-        println!("");
-        println!("Introduzca el 'Número de envío' actual,");
-        println!("según la aplicación de planilla en línea BAC:");
-        let envio: Result<u32, _> = try_read!();
-        match envio {
-            Ok(n) => {
-                if (n < 1) || (n > 99999) {
-                    println!("ERROR: número de envío inválido: {}", n);
-                    println!("Introduzca un número entre 1 y 99999");
-                } else {
-                    return n;
-                }
-            },
-            Err(err) => panic!("ERROR: entrada de texto invalida -- {}", err),
+        println!(
+            "La fecha a usar es: {}-{:0>2}-{:0>2}",
+            date.year(),
+            date.month(),
+            date.day()
+        );
+        let usetoday = input()
+            .msg("Desea usar esa fecha [Y/n]")
+            .default("Y".to_string())
+            .get();
+
+        if usetoday.eq("Y") {
+            break;
+        } else {
+            println!("El año actual es {}", date.year());
+            let year = input()
+                .repeat_msg(
+                    "Presione Intro para usar el año actual o introduzca un año diferente: ",
+                )
+                .default(date.year())
+                .inside_err(2000..=2100, "ERROR: Introduzca un valor entre 2000 y 2100")
+                .get();
+            date = date.with_year(year).expect("Año inválido");
+
+            println!("El mes actual es {}", date.month());
+            let month = input()
+                .repeat_msg(
+                    "Presione Intro para usar el mes actual o introduzca un mes diferente: ",
+                )
+                .default(date.month())
+                .inside_err(1..=12, "ERROR: Introduzca un valor entre 1 y 12")
+                .get();
+            date = date.with_month(month).expect("Mes inválido");
+
+            println!("El día de hoy es {}", date.day());
+            let day = input()
+                .repeat_msg(
+                    "Presione Intro para usar el día de hoy o introduzca un día diferente: ",
+                )
+                .default(date.day())
+                .inside_err(1..=31, "ERROR: Introduzca un valor entre 1 y 31")
+                .get();
+            date = date.with_day(day).expect("Día inválido");
         }
     }
+
+    println!("");
+    println!(
+        "La fecha a usar es {}-{:0>2}-{:0>2}",
+        date.year(),
+        date.month(),
+        date.day()
+    );
+
+    format!("{}{:0>2}{:0>2}", date.year(), date.month(), date.day())
+}
+
+pub fn get_envio_correlative() -> u32 {
+    println!("");
+    println!("Introduzca el 'Número de envío' actual,");
+    println!("según la aplicación de planilla en línea BAC:");
+    let envio: u32 = input().get();
+    envio
 }
 
 pub fn get_month() -> u32 {
-    let now = Local::now();
-    println!("Hoy es {:?}", now.to_rfc2822());
-    let mut month = Month::new(now.month() as usize);
-    loop {
-        println!("");
-        month.print_current();
-        println!("Introduzca el número del mes deseado (1=Enero, 12=Diciembre, etc.)");
-        let num: Result<usize, _> = try_read!();
-        match num {
-            Ok(n) => {
-                if (n < 1) || (n > 12) {
-                    println!("ERROR: número de mes inválido: {}", n);
-                    println!("Introduzca un número entre 1 y 12");
-                } else {
-                    month.update(n);
-                    month.print_confirm();
-                    break;
-                }
-            }
-            Err(err) => panic!("ERROR: entrada de texto invalida -- {}", err),
-        }
-    }
+    let now = Local::today();
+    println!("Hoy es {:?}", now);
+    let mut month = Date::new(now.month() as usize);
+    println!("");
+    month.print_current();
+    let num = input()
+        .msg("Introduzca el número del mes deseado (1=Enero, 12=Diciembre, etc.)")
+        .default(month.value)
+        .get();
 
     month.value as u32
 }
 
-pub fn gen_files(month: u32, envio: u32) {
-    let config = config::Config::new(month, envio);
+pub fn gen_files(date: String, envio: u32) {
+    let config = config::Config::new(date, envio);
     let employees = employee::get_employees(&config).expect("Error leyendo empleados");
     let mut pay = payment::Payment::new(&config, &employees);
     writepay::write_salario(&config, &employees, &mut pay)
@@ -124,6 +161,5 @@ pub fn gen_files(month: u32, envio: u32) {
 pub fn wait_for_user() {
     println!("");
     println!("Programa ejecutado correctamente");
-    println!("Presione Enter para cerrar esta ventana");
-    let _: String = read!("{}\r\n");
+    let _: String = input().msg("Presione Enter para cerrar esta ventana").get();
 }

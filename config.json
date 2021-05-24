@@ -28,12 +28,12 @@
         "texto_salario": "SALARIO %%%",
         "texto_propina": "PROPINA %%%",
         "texto_viatico": "VIATICOS %%%",
-        "dia_pago": "30",
         "plan": "9679",
         "mes": "00",
         "envio": 0,
         "batch": "B",
         "trans": "T",
+        "date": "20001231",
         "colwidth": [
             1,
             4,

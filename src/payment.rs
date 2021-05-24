@@ -26,7 +26,7 @@ struct Text {
 impl Payment {
     pub fn new(config: &Config, employees: &Vec<Employee>) -> Payment {
         let persons  = HashMap::new();
-        let date = config.get_payment_date();
+        let date = config.bac.date.clone();
         let column = Column {
             alias: 255,
             amount: 255,
@@ -178,7 +178,7 @@ mod tests {
     use crate::employee::get_employees;
     #[test]
     fn new_payment() {
-        let config = Config::new(1, 1);
+        let config = Config::new("20200131".to_string(), 1);
         let employees = get_employees(&config).expect("Error leyendo empleados");
         let payment = Payment::new(&config, &employees);
         let e0 = &employees[0];
