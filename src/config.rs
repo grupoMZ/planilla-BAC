@@ -1,10 +1,33 @@
 // TODO: Detect month automatically
-use chrono::{Datelike, Local};
 use serde::{Deserialize, Serialize};
 use std::error::Error;
 use std::fs::File;
 use std::io::BufReader;
+use calamine::{XlsxError, DeError};
+use thiserror::Error;
 
+const CONFIG_FNAME: &'static str = "config.json";
+#[derive(Error, Debug)]
+pub enum ConfigError {
+    #[error("{err:#?} \r\nEl archivo {path:?} no fue encontrado.")]
+    FileNameError {err: std::io::Error, path: String},
+    #[error("{err:#?} \r\nEl archivo {path:?} no fue encontrado.")]
+    ExcelFileError {err: XlsxError, path: String},
+    #[error("La hoja {sheet:?} no fue encontrada en el archivo {fname:?}.")]
+    ExcelSheetError {sheet: String, fname: String},
+    #[error("{err:#?} \r\nLa hoja {sheet:?} en el archivo {fname:?} no pudo ser analizada.")]
+    ExcelParseError {err: DeError, sheet: String, fname: String},
+    #[error("La ruta {path:?} no es valida.")]
+    PathError {path: String},
+    #[error("{err:#?} \r\nEl archivo {path:?} no pudo ser analizado.")]
+    ParseError {err: serde_json::Error, path: String},
+    #[error("Error en la celda (fila: {row:?}, columna: {col:?}).")]
+    ExcelCellError {row: usize, col: usize},
+    #[error(transparent)]
+    IOError(#[from] std::io::Error),
+    #[error("Closing")]
+    EndError
+}
 #[derive(PartialEq, Serialize, Deserialize, Debug)]
 pub struct Config {
     pub path: Path,
@@ -30,6 +53,7 @@ pub struct Path {
 pub struct BAC {
     pub batch: String,
     pub trans: String,
+    pub date: String,
     pub plan: String,
     pub mes: String,
     pub envio: u32,
@@ -37,7 +61,6 @@ pub struct BAC {
     pub texto_salario: String,
     pub texto_propina: String,
     pub texto_viatico: String,
-    pub dia_pago: String,
 }
 
 #[derive(PartialEq, Serialize, Deserialize, Debug)]
@@ -64,33 +87,29 @@ pub struct Fijos {
 
 
 impl Config {
-    pub fn new(month: u32, envio: u32) -> Config {
-        let mut c = Config::get_config().expect("Error en el archivo de configuración.");
-        c.replace_month(month);
+    pub fn new(date: String, envio: u32) -> Result<Config, ConfigError> {
+        let mut c = Config::get_config()?;
+        c.bac.date = date;
+        c.replace_month();
         c.replace_envio_correlative(envio);
-        c
+        Ok(c)
     }
 
-    pub fn get_payment_date(&self) -> String {
-        let now = Local::now();
-        let d = &self.bac.dia_pago;
-        let m = &self.bac.mes;
-        format!("{}{:02}{:02}", now.year(), m, d)
-    }
-
-    fn get_config() -> Result<Config, Box<dyn Error>> {
-        let path = "config.json";
-        let file = File::open(path)?;
+    fn get_config() -> Result<Config, ConfigError> {
+        let path = CONFIG_FNAME.to_string();
+        let file = File::open(&path).map_err(|err| ConfigError::FileNameError {err, path})?;
         let reader = BufReader::new(file);
 
-        let c = serde_json::from_reader(reader)?;
+        let c = serde_json::from_reader(reader).map_err(|err| 
+        ConfigError::ParseError { err, path: CONFIG_FNAME.to_string() })?;
 
         Ok(c)
     }
 
-    fn replace_month(&mut self, month: u32) {
-        let ms = format!("{:0>2}", month);
-        let idx = (month as usize) - 1;
+    fn replace_month(&mut self) {
+        let month = &self.bac.date[4..6].to_string();  // date in format "YYYYMMDD"
+        let m: usize = month.parse().unwrap();
+        let idx = m - 1;
         self.path.pago_bac_salario = self.path.pago_bac_salario.replace("%%%", &self.month[idx]);
         self.path.pago_bac_viatico = self.path.pago_bac_viatico.replace("%%%", &self.month[idx]);
         self.path.pago_bac_propina = self.path.pago_bac_propina.replace("%%%", &self.month[idx]);
@@ -98,10 +117,10 @@ impl Config {
         self.bac.texto_viatico = self.bac.texto_viatico.replace("%%%", &self.month[idx]);
         self.bac.texto_propina = self.bac.texto_propina.replace("%%%", &self.month[idx]);
         self.path.planilla_fijos = self.path.planilla_fijos.replace("%%%", &self.month[idx]);
-        self.path.planilla_fijos = self.path.planilla_fijos.replace("##", &ms);
+        self.path.planilla_fijos = self.path.planilla_fijos.replace("##", &month);
         self.path.planilla_eventuales = self.path.planilla_eventuales.replace("%%%", &self.month[idx]);
-        self.path.planilla_eventuales = self.path.planilla_eventuales.replace("##", &ms);
-        self.bac.mes = ms.clone();
+        self.path.planilla_eventuales = self.path.planilla_eventuales.replace("##", &month);
+        self.bac.mes = month.clone();
     }
 
     fn replace_envio_correlative(&mut self, envio: u32) {
@@ -138,7 +157,7 @@ mod tests {
     use super::*;
     #[test]
     fn get_cfg() {
-        let c = Config::new(1, 123);
+        let c = Config::new("20200101".to_string(), 123).unwrap();
 
         assert_eq!("9679", c.bac.plan);
         assert_eq!("DEC", c.month[11]);
@@ -151,7 +170,7 @@ mod tests {
 
     #[test]
     fn get_envio() {
-        let c = Config::new(1, 123);
+        let c = Config::new("20200101".to_string(), 123).unwrap();
 
         assert_eq!("00123", c.get_envio_salario());
         assert_eq!("00124", c.get_envio_viatico());

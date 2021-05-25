@@ -1,6 +1,6 @@
 [package]
 name = "planilla-bac"
-version = "0.1.0"
+version = "0.1.1"
 authors = ["P. Zometa <zometa@anixet.com>"]
 edition = "2018"
 
@@ -11,5 +11,6 @@ calamine = "0.18.0"
 serde = { version = "1.0.126", features = ["derive"] }
 serde_json = "1.0.59"
 chrono = "0.4.0"
-colored = "2.0.0"
-text_io = "0.1.8"
+read_input = "0.8"
+thiserror = "1.0"
+anyhow = "1.0"
