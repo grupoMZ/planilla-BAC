@@ -58,8 +58,8 @@ fn get_employees_from(xlpath: &str) -> Result<Vec<Employee>, ConfigError> {
 mod tests {
     use super::*;
     #[test]
-    fn it_works() {
-        let path = "./src/test_empleados_bac.xlsx";
+    fn get_employees() {
+        let path = "./tests/test_empleados_bac.xlsx";
         let e = get_employees_from(path).expect("ERROR");
         let e0 = Employee {
             nit: String::from("123"),
