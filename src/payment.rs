@@ -54,8 +54,8 @@ impl Payment {
     #[cfg(test)]
     pub fn new_test_payment() -> Payment {
         let mut persons = HashMap::new();
-        persons.insert("Maria Jose".to_string(), 123456 as u64);
-        persons.insert("Siria".to_string(), 7890 as u64);
+        persons.insert("MARIA JOSE".to_string(), 123456 as u64);
+        persons.insert("SIRIA".to_string(), 7890 as u64);
         let payment = Payment {
             persons,
             date: String::from("20210530"),
@@ -210,8 +210,8 @@ mod tests {
         //assert_matches!(e, u);
         assert_eq!(1, payment.column.alias);
         assert_eq!(22, payment.column.amount);
-        assert_eq!(123456, payment.persons["Maria Jose"]); // remains unchanged from test
-        assert_eq!(7890 + 32579, payment.persons["Siria"]); // add to test the amount in planilla
+        assert_eq!(123456, payment.persons["MARIA JOSE"]); // remains unchanged from test
+        assert_eq!(7890 + 32579, payment.persons["SIRIA"]); // add to test the amount in planilla
     }
 
     #[test]
