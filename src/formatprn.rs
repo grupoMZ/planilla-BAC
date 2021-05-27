@@ -80,9 +80,9 @@ mod tests {
     use crate::employee::get_employees;
     #[test]
     fn first_line() {
-        let c = Config::new(5, 17);
+        let c = Config::new("20210531".to_string(), 17).unwrap();
         let payment = Payment::new_test_payment();
-        let s = gen_first_line(&c, &payment, &c.get_envio_salario());
+        let s = gen_first_line(&c, &payment, &c.get_envio(0));
         assert_eq!(
             "B967900017                         20210530       131346    2\r\n",
             s.as_str()
@@ -91,15 +91,16 @@ mod tests {
 
     #[test]
     fn second_line() {
-        let config = Config::new(5, 17);
+        let config = Config::new("20210530".to_string(), 17).unwrap();
         let employees = get_employees(&config).expect("Error opening employees");
         let payment = Payment::new(&config, &employees);
-        let s = gen_employee_entries(&config, &payment, &employees, &config.bac.texto_propina, 
-        &config.get_envio_propina());
+        let num = 2;
+        let s = gen_employee_entries(&config, &payment, &employees, &config.outputs[num].text, 
+        &config.get_envio(num));
         let mut lines = s.lines();
         if let Some(ss) = lines.next() {
         assert_eq!(
-            "T96790001905051008991016          120210530            0     PROPINA MAY                    SILVIA ELIZABETH AVENDA#O PINE118543040",
+            "T96790001905051008991016          120210530            0     PROPINA MAY                    SILVIA ELIZABETH AVENDANO PINE118543040",
            ss);
         } else {
             assert_eq!(true, false);

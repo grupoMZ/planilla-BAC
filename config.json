@@ -1,39 +1,69 @@
 {
-    "path": {
-        "planilla_fijos_dir": "../Planilla_ISSS_y_AFP_2021",
-        "planilla_eventuales_dir": "../Planilla_Retenciones_2021",
-        "pago_bac_dir": "../pago_bac",
-        "planilla_fijos": "## GMZ Planilla Operaciones %%%.xlsx",
-        "planilla_eventuales": "## GMZ Planilla de eventuales %%%.xlsx",
-        "pago_bac_salario": "##### pago BAC salario %%%.prn",
-        "pago_bac_propina": "##### pago BAC propina %%%.prn",
-        "pago_bac_viatico": "##### pago BAC viatico %%%.prn",
-        "empleados_bac": "empleados_bac.xlsx"
-    },
+    "outputs": [
+        {
+            "dir": "./tests/pago_bac",
+            "file": "##### pago BAC salario %%%.prn",
+            "text": "SALARIO %%%",
+            "inputs": [
+                {
+                    "dir": "./tests/Planilla_ISSS_y_AFP_2021",
+                    "file": "## GMZ Planilla Operaciones %%%.xlsx",
+                    "sheets": [
+                        "Planilla Admin",
+                        " Planilla Ops  1  al 31 "
+                    ]
+                },
+                {
+                    "dir": "./tests/Planilla_Retenciones_2021",
+                    "file": "## GMZ Planilla de eventuales %%%.xlsx",
+                    "sheets": [
+                        "Planilla fija operaciones  ",
+                        "Planilla operaciones "
+                    ]
+                }
+            ]
+        },
+        {
+            "dir": "./tests/pago_bac",
+            "file": "##### pago BAC viatico %%%.prn",
+            "text": "VIATICOS %%%",
+            "inputs": [
+                {
+                    "dir": "./tests/Planilla_ISSS_y_AFP_2021",
+                    "file": "## GMZ Planilla Operaciones %%%.xlsx",
+                    "sheets": [
+                        "Viaticos Ops  "
+                    ]
+                }
+            ]
+        },
+        {
+            "dir": "./tests/pago_bac",
+            "file": "##### pago BAC propina %%%.prn",
+            "text": "PROPINA %%%",
+            "inputs": [
+                {
+                    "dir": "./tests/Planilla_Retenciones_2021",
+                    "file": "## GMZ Planilla de eventuales %%%.xlsx",
+                    "sheets": [
+                        "Propina Bar y Cocina  "
+                    ]
+                }
+            ]
+        }
+    ],
     "excel": {
         "name": "NOMBRE",
         "amount": "RECIB",
-        "eventuales": {
-            "fijos": "Planilla fija operaciones  ",
-            "ops": "Planilla operaciones ",
-            "propina": "Propina Bar y Cocina  "
-        },
-        "fijos": {
-            "admin": "Planilla Admin",
-            "ops": " Planilla Ops  1  al 31 ",
-            "viaticos": "Viaticos Ops  "
-        }
+        "empleados_bac": "empleados_bac.xlsx"
     },
     "bac": {
-        "texto_salario": "SALARIO %%%",
-        "texto_propina": "PROPINA %%%",
-        "texto_viatico": "VIATICOS %%%",
-        "dia_pago": "30",
         "plan": "9679",
         "mes": "00",
         "envio": 0,
         "batch": "B",
         "trans": "T",
+        "date": "20001231",
         "colwidth": [
             1,
             4,
