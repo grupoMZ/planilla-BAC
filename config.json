@@ -1,12 +1,12 @@
 {
     "outputs": [
         {
-            "dir": "../pago_bac",
+            "dir": "./tests/pago_bac",
             "file": "##### pago BAC salario %%%.prn",
             "text": "SALARIO %%%",
             "inputs": [
                 {
-                    "dir": "../Planilla_ISSS_y_AFP_2021",
+                    "dir": "./tests/Planilla_ISSS_y_AFP_2021",
                     "file": "## GMZ Planilla Operaciones %%%.xlsx",
                     "sheets": [
                         "Planilla Admin",
@@ -14,7 +14,7 @@
                     ]
                 },
                 {
-                    "dir": "../Planilla_Retenciones_2021",
+                    "dir": "./tests/Planilla_Retenciones_2021",
                     "file": "## GMZ Planilla de eventuales %%%.xlsx",
                     "sheets": [
                         "Planilla fija operaciones  ",
@@ -24,12 +24,12 @@
             ]
         },
         {
-            "dir": "../pago_bac",
+            "dir": "./tests/pago_bac",
             "file": "##### pago BAC viatico %%%.prn",
             "text": "VIATICOS %%%",
             "inputs": [
                 {
-                    "dir": "../Planilla_ISSS_y_AFP_2021",
+                    "dir": "./tests/Planilla_ISSS_y_AFP_2021",
                     "file": "## GMZ Planilla Operaciones %%%.xlsx",
                     "sheets": [
                         "Viaticos Ops  "
@@ -38,12 +38,12 @@
             ]
         },
         {
-            "dir": "../pago_bac",
+            "dir": "./tests/pago_bac",
             "file": "##### pago BAC propina %%%.prn",
             "text": "PROPINA %%%",
             "inputs": [
                 {
-                    "dir": "../Planilla_Retenciones_2021",
+                    "dir": "./tests/Planilla_Retenciones_2021",
                     "file": "## GMZ Planilla de eventuales %%%.xlsx",
                     "sheets": [
                         "Propina Bar y Cocina  "

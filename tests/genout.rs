@@ -1,6 +1,5 @@
-
 use planilla_bac as pbac;
-use std::fs::{read, write};
+use std::fs::read;
 
 fn assert_files_eq(fref: &str, fgen: &str) {
     let bgen = read(fgen).unwrap();
@@ -20,9 +19,9 @@ fn output_prn_files() {
     let envio = 17;
     pbac::gen_files(date, envio).unwrap();
     assert_files_eq("./tests/00017_test_salario_ABR.prn",
-    "../pago_bac/00017 pago BAC salario ABR.prn");
+    "./tests/pago_bac/00017 pago BAC salario ABR.prn");
     assert_files_eq("./tests/00018_test_viatico_ABR.prn",
-    "../pago_bac/00018 pago BAC viatico ABR.prn");
+    "./tests/pago_bac/00018 pago BAC viatico ABR.prn");
     assert_files_eq("./tests/00019_test_propina_ABR.prn",
-    "../pago_bac/00019 pago BAC propina ABR.prn");
+    "./tests/pago_bac/00019 pago BAC propina ABR.prn");
 }

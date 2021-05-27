@@ -203,7 +203,7 @@ mod tests {
     }
     #[test]
     fn get_pay() {
-        let path = "../Planilla_ISSS_y_AFP_2021/04 GMZ Planilla Operaciones ABR.xlsx";
+        let path = "./tests/Planilla_ISSS_y_AFP_2021/04 GMZ Planilla Operaciones ABR.xlsx";
         let sheet = " Planilla Ops  1  al 31 ".to_string();
         let mut payment = Payment::new_test_payment();
         payment.compute_payment_amount(path, &sheet).expect("ERROR");

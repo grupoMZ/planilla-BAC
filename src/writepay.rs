@@ -55,9 +55,3 @@ pub fn write_outputs(
     Ok(())
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-    #[test]
-    fn payment_propina() {}
-}
