@@ -6,15 +6,15 @@ use serde::{Deserialize, Serialize};
 
 #[derive(PartialEq, Serialize, Deserialize, Debug)]
 pub struct Employee {
-    pub nit: String,
-    pub nombre: String,
-    pub cuenta: String,
     pub alias: String,
+    pub nombre: String,
+    pub nit: String,
+    pub cuenta: String,
 }
 
 pub fn get_employees(config: &Config) -> Result<Vec<Employee>, ConfigError> {
-    let path = config.path.empleados_bac.clone();
-    let pbuf = PathBuf::from(config.path.empleados_bac.as_str());
+    let path = config.excel.empleados_bac.clone();
+    let pbuf = PathBuf::from(config.excel.empleados_bac.as_str());
     let xlpath = pbuf
         .as_path()
         .to_str()
@@ -39,7 +39,7 @@ fn get_employees_from(xlpath: &str) -> Result<Vec<Employee>, ConfigError> {
 
     let sheet = String::from(name);
     let fname = String::from(xlpath);
-    let columns = ["nit", "nombre", "cuenta", "alias"];
+    let columns = ["alias", "nombre", "nit", "cuenta"];
     let iter_result = RangeDeserializerBuilder::with_headers(&columns)
         .from_range::<_, Employee>(&range)
         .map_err(|err| ConfigError::ExcelParseError { err, sheet, fname })?;

@@ -30,23 +30,25 @@ pub enum ConfigError {
 }
 #[derive(PartialEq, Serialize, Deserialize, Debug)]
 pub struct Config {
-    pub path: Path,
+    pub outputs: Vec<Output>,
     pub bac: BAC,
     pub excel: Excel,
     pub month: Vec<String>,
 }
 
 #[derive(PartialEq, Serialize, Deserialize, Debug)]
-pub struct Path {
-    pub planilla_fijos_dir: String,
-    pub planilla_eventuales_dir: String,
-    pub pago_bac_dir: String,
-    pub empleados_bac: String,
-    pub planilla_fijos: String,
-    pub planilla_eventuales: String,
-    pub pago_bac_salario: String,
-    pub pago_bac_propina: String,
-    pub pago_bac_viatico: String,
+pub struct Output {
+    pub dir: String,
+    pub file: String,
+    pub text: String,
+    pub inputs: Vec<Input>
+}
+
+#[derive(PartialEq, Serialize, Deserialize, Debug)]
+pub struct Input {
+    pub dir: String,
+    pub file: String,
+    pub sheets: Vec<String>,
 }
 
 #[derive(PartialEq, Serialize, Deserialize, Debug)]
@@ -58,33 +60,14 @@ pub struct BAC {
     pub mes: String,
     pub envio: u32,
     pub colwidth: Vec<usize>,
-    pub texto_salario: String,
-    pub texto_propina: String,
-    pub texto_viatico: String,
 }
 
 #[derive(PartialEq, Serialize, Deserialize, Debug)]
 pub struct Excel {
     pub name: String,
     pub amount: String,
-    pub eventuales: Eventuales,
-    pub fijos: Fijos,
+    pub empleados_bac: String,
 }
-
-#[derive(PartialEq, Serialize, Deserialize, Debug)]
-pub struct Eventuales {
-    pub fijos: String,
-    pub ops: String,
-    pub propina: String,
-}
-
-#[derive(PartialEq, Serialize, Deserialize, Debug)]
-pub struct Fijos {
-    pub admin: String,
-    pub ops: String,
-    pub viaticos: String,
-}
-
 
 impl Config {
     pub fn new(date: String, envio: u32) -> Result<Config, ConfigError> {
@@ -110,42 +93,31 @@ impl Config {
         let month = &self.bac.date[4..6].to_string();  // date in format "YYYYMMDD"
         let m: usize = month.parse().unwrap();
         let idx = m - 1;
-        self.path.pago_bac_salario = self.path.pago_bac_salario.replace("%%%", &self.month[idx]);
-        self.path.pago_bac_viatico = self.path.pago_bac_viatico.replace("%%%", &self.month[idx]);
-        self.path.pago_bac_propina = self.path.pago_bac_propina.replace("%%%", &self.month[idx]);
-        self.bac.texto_salario = self.bac.texto_salario.replace("%%%", &self.month[idx]);
-        self.bac.texto_viatico = self.bac.texto_viatico.replace("%%%", &self.month[idx]);
-        self.bac.texto_propina = self.bac.texto_propina.replace("%%%", &self.month[idx]);
-        self.path.planilla_fijos = self.path.planilla_fijos.replace("%%%", &self.month[idx]);
-        self.path.planilla_fijos = self.path.planilla_fijos.replace("##", &month);
-        self.path.planilla_eventuales = self.path.planilla_eventuales.replace("%%%", &self.month[idx]);
-        self.path.planilla_eventuales = self.path.planilla_eventuales.replace("##", &month);
+        for output in self.outputs.iter_mut() {
+            output.text = output.text.replace("%%%", &self.month[idx]);
+            output.file = output.file.replace("%%%", &self.month[idx]);
+            for input in output.inputs.iter_mut() {
+                input.file = input.file.replace("%%%", &self.month[idx]);
+                input.file = input.file.replace("##", &month);
+            }
+        }
+
         self.bac.mes = month.clone();
     }
 
     fn replace_envio_correlative(&mut self, envio: u32) {
         self.bac.envio = envio;
-        let es = self.get_envio_salario();
-        self.path.pago_bac_salario = self.path.pago_bac_salario.replace("#####", &es);
-        self.bac.texto_salario = self.bac.texto_salario.replace("#####", &es);
-        let es = self.get_envio_viatico();
-        self.path.pago_bac_viatico = self.path.pago_bac_viatico.replace("#####", &es);
-        self.bac.texto_viatico = self.bac.texto_viatico.replace("#####", &es);
-        let es = self.get_envio_propina();
-        self.path.pago_bac_propina = self.path.pago_bac_propina.replace("#####", &es);
-        self.bac.texto_propina = self.bac.texto_propina.replace("#####", &es);
+        let mut envios = Vec::new();
+        for i in 0..self.outputs.len() {
+            envios.push(self.get_envio(i));
+        }
+        for (i, output) in self.outputs.iter_mut().enumerate() {
+            output.file = output.file.replace("#####", &envios[i]);
+        }       
     }
 
-    pub fn get_envio_salario(&self) -> String {
-        format!("{:0>5}", self.bac.envio)
-    }
-
-    pub fn get_envio_viatico(&self) -> String {
-        format!("{:0>5}", self.bac.envio+1)
-    }
-
-    pub fn get_envio_propina(&self) -> String {
-        format!("{:0>5}", self.bac.envio+2)
+    pub fn get_envio(&self, offset: usize) -> String {
+        format!("{:0>5}", self.bac.envio + offset as u32)
     }
 }
 
@@ -161,19 +133,18 @@ mod tests {
 
         assert_eq!("9679", c.bac.plan);
         assert_eq!("DEC", c.month[11]);
-        assert_eq!("PROPINA ENE", c.bac.texto_propina);
-        assert_eq!("00123 pago BAC salario ENE.prn", c.path.pago_bac_salario);
-        assert_eq!("00124 pago BAC viatico ENE.prn", c.path.pago_bac_viatico);
-        assert_eq!("00125 pago BAC propina ENE.prn", c.path.pago_bac_propina);
-        assert_eq!("01 GMZ Planilla Operaciones ENE.xlsx", c.path.planilla_fijos);
+        assert_eq!("PROPINA ENE", c.outputs[2].text);
+        assert_eq!("00123 pago BAC salario ENE.prn", c.outputs[0].file);
+        assert_eq!("00124 pago BAC viatico ENE.prn", c.outputs[1].file);
+        assert_eq!("00125 pago BAC propina ENE.prn", c.outputs[2].file);
+        assert_eq!("01 GMZ Planilla Operaciones ENE.xlsx", c.outputs[0].inputs[0].file);
     }
 
     #[test]
     fn get_envio() {
         let c = Config::new("20200101".to_string(), 123).unwrap();
 
-        assert_eq!("00123", c.get_envio_salario());
-        assert_eq!("00124", c.get_envio_viatico());
-        assert_eq!("00125", c.get_envio_propina());
+        assert_eq!("00123", c.get_envio(0));
+        assert_eq!("00125", c.get_envio(2));
     }
 }

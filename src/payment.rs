@@ -72,6 +72,12 @@ impl Payment {
         payment
     }
 
+    pub fn reset_amount(&mut self) {
+        for (_, amount) in self.persons.iter_mut() {
+            *amount = 0;
+        }
+    }
+
     pub fn get_total_payment(&self) -> u64 {
         let mut total = 0;
 

@@ -1,126 +1,58 @@
-use calamine::{Error};
-use std::fs;
-use std::path::{PathBuf};
-use crate::config::{Config, ConfigError};
+use crate::config::{Config, ConfigError, Output};
 use crate::employee::Employee;
-use crate::payment::Payment;
 use crate::formatprn;
+use crate::payment::Payment;
+use calamine::Error;
+use std::fs;
+use std::path::PathBuf;
 
-
-fn compute_payment_fijos_admin(config: &Config, payment: &mut Payment) -> Result<(), ConfigError> {
-    let path = config.path.planilla_fijos_dir.clone();
-    let mut pathbuf = PathBuf::from(config.path.planilla_fijos_dir.as_str());
-    pathbuf.push(&config.path.planilla_fijos);
-
-    let xlpath = pathbuf.as_path().to_str()
-        .ok_or_else(|| ConfigError::PathError { path })?;
-    payment.compute_payment_amount(xlpath, &config.excel.fijos.admin)?;
+fn compute_payment(output: &Output, payment: &mut Payment) -> Result<(), ConfigError> {
+    payment.reset_amount();
+    for input in output.inputs.iter() {
+        let path = input.dir.clone();
+        let mut pathbuf = PathBuf::from(input.dir.as_str());
+        pathbuf.push(&input.file);
+        let xlpath = pathbuf
+            .as_path()
+            .to_str()
+            .ok_or_else(|| ConfigError::PathError { path })?;
+        for sheet in input.sheets.iter() {
+            payment.compute_payment_amount(xlpath, sheet)?;
+        }
+    }
     Ok(())
 }
 
-fn compute_payment_fijos_ops(config: &Config, payment: &mut Payment) -> Result<(), ConfigError> {
-    let path = config.path.planilla_fijos_dir.clone();
-    let mut pathbuf = PathBuf::from(config.path.planilla_fijos_dir.as_str());
-    pathbuf.push(&config.path.planilla_fijos);
+pub fn write_outputs(
+    config: &Config,
+    employees: &Vec<Employee>,
+    payment: &mut Payment,
+) -> Result<(), ConfigError> {
+    for (i, output) in config.outputs.iter().enumerate() {
+        compute_payment(&output, payment)?;
 
-    let xlpath = pathbuf.as_path().to_str()
-        .ok_or_else(|| ConfigError::PathError { path })?;
-    payment.compute_payment_amount(xlpath, &config.excel.fijos.ops)?;
-    Ok(())
-}
+        let mut contents = formatprn::gen_first_line(config, payment, &config.get_envio(i));
+        contents.push_str(
+            formatprn::gen_employee_entries(
+                config,
+                payment,
+                employees,
+                &output.text,
+                &config.get_envio(i),
+            )
+            .as_str(),
+        );
 
-fn compute_payment_eventuales_fijos(config: &Config, payment: &mut Payment) -> Result<(), ConfigError> {
-    let path = config.path.planilla_eventuales_dir.clone();
-    let mut pathbuf = PathBuf::from(config.path.planilla_eventuales_dir.as_str());
-    pathbuf.push(&config.path.planilla_eventuales);
-
-    let xlpath = pathbuf.as_path().to_str()
-        .ok_or_else(|| ConfigError::PathError { path })?;
-    payment.compute_payment_amount(xlpath, &config.excel.eventuales.fijos)?;
-    Ok(())
-}
-
-fn compute_payment_eventuales_ops(config: &Config, payment: &mut Payment) -> Result<(), ConfigError> {
-    let path = config.path.planilla_eventuales_dir.clone();
-    let mut pathbuf = PathBuf::from(config.path.planilla_eventuales_dir.as_str());
-    pathbuf.push(&config.path.planilla_eventuales);
-
-    let xlpath = pathbuf.as_path().to_str()
-        .ok_or_else(|| ConfigError::PathError { path })?;
-    payment.compute_payment_amount(xlpath, &config.excel.eventuales.ops)?;
-    Ok(())
-}
-
-
-pub fn write_salario(config: &Config, employees: &Vec<Employee>, payment: &mut Payment) -> Result<(), ConfigError> {
-
-    compute_payment_fijos_admin(config, payment)?;
-    compute_payment_fijos_ops(config, payment)?;
-    compute_payment_eventuales_fijos(config, payment)?;
-    compute_payment_eventuales_ops(config, payment)?;
-
-    let mut contents = formatprn::gen_first_line(config, payment, &config.get_envio_salario());
-    let text = &config.bac.texto_salario;
-    contents.push_str(formatprn::gen_employee_entries(config, payment, employees, text, 
-    &config.get_envio_salario()).as_str());
-    let mut pathbuf = PathBuf::from(config.path.pago_bac_dir.as_str());
-    pathbuf.push(&config.path.pago_bac_salario);
-    let path = config.path.pago_bac_salario.clone();
-    let prnpath = pathbuf.as_path().to_str()
-        .ok_or_else(|| ConfigError::PathError { path })?;
-    fs::write(prnpath, contents)?;
-    println!("[INFO] Se escribió con éxito el archivo '{}' ", prnpath);
-    Ok(())
-}
-
-pub fn write_viatico(config: &Config, employees: &Vec<Employee>, payment: &mut Payment) -> Result<(), ConfigError> {
-
-    let mut pathbuf = PathBuf::from(config.path.planilla_fijos_dir.as_str());
-    pathbuf.push(&config.path.planilla_fijos);
-
-    let path = config.path.planilla_fijos.clone();
-    let xlpath = pathbuf.as_path().to_str()
-        .ok_or_else(|| ConfigError::PathError { path })?;
-
-    payment.compute_payment_amount(xlpath, &config.excel.fijos.viaticos)?;
-
-    let mut contents = formatprn::gen_first_line(config, payment, &config.get_envio_viatico());
-    let text = &config.bac.texto_viatico;
-    contents.push_str(formatprn::gen_employee_entries(config, payment, employees, text, 
-    &config.get_envio_viatico()).as_str());
-    let mut pathbuf = PathBuf::from(config.path.pago_bac_dir.as_str());
-    pathbuf.push(&config.path.pago_bac_viatico);
-    let path = config.path.pago_bac_viatico.clone();
-    let prnpath = pathbuf.as_path().to_str()
-        .ok_or_else(|| ConfigError::PathError { path })?;
-    fs::write(prnpath, contents)?;
-    println!("[INFO] Se escribió con éxito el archivo '{}' ", prnpath);
-    Ok(())
-}
-
-pub fn write_propina(config: &Config, employees: &Vec<Employee>, payment: &mut Payment) -> Result<(), ConfigError> {
-
-    let mut pathbuf = PathBuf::from(config.path.planilla_eventuales_dir.as_str());
-    pathbuf.push(&config.path.planilla_eventuales);
-
-    let path = config.path.planilla_eventuales.clone();
-    let xlpath = pathbuf.as_path().to_str()
-        .ok_or_else(|| ConfigError::PathError { path })?;
-
-    payment.compute_payment_amount(xlpath, &config.excel.eventuales.propina)?;
-
-    let mut contents = formatprn::gen_first_line(config, payment, &config.get_envio_propina());
-    let text = &config.bac.texto_propina;
-    contents.push_str(formatprn::gen_employee_entries(config, payment, employees, text, 
-    &config.get_envio_propina()).as_str());
-    let mut pathbuf = PathBuf::from(config.path.pago_bac_dir.as_str());
-    pathbuf.push(&config.path.pago_bac_propina);
-    let path = config.path.pago_bac_propina.clone();
-    let prnpath = pathbuf.as_path().to_str()
-        .ok_or_else(|| ConfigError::PathError { path })?;
-
-    fs::write(prnpath, contents)?;
-    println!("[INFO] Se escribió con éxito el archivo '{}' ", prnpath);
+        let mut pathbuf = PathBuf::from(output.dir.as_str());
+        pathbuf.push(&output.file);
+        let path = output.file.clone();
+        let prnpath = pathbuf
+            .as_path()
+            .to_str()
+            .ok_or_else(|| ConfigError::PathError { path })?;
+        fs::write(prnpath, contents)?;
+        println!("[INFO] Se escribió con éxito el archivo '{}' ", prnpath);
+    }
     Ok(())
 }
 
@@ -128,7 +60,5 @@ pub fn write_propina(config: &Config, employees: &Vec<Employee>, payment: &mut P
 mod tests {
     use super::*;
     #[test]
-    fn payment_propina() {
-
-    }
+    fn payment_propina() {}
 }
