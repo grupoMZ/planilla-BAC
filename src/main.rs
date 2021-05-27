@@ -1,4 +1,3 @@
-use std::process::exit;
 use anyhow::{Context, Result};
 use planilla_bac as pbac;
 

@@ -1,4 +1,3 @@
-use chrono::prelude::*;
 use chrono::{Datelike, Local};
 
 use config::ConfigError;

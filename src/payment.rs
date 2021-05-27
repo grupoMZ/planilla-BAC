@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use calamine::{open_workbook, DataType, Error, Reader, Xlsx};
+use calamine::{open_workbook, DataType, Reader, Xlsx};
 
 use crate::config::{Config, ConfigError};
 use crate::employee::Employee;

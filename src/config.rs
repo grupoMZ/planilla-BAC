@@ -1,6 +1,5 @@
 // TODO: Detect month automatically
 use serde::{Deserialize, Serialize};
-use std::error::Error;
 use std::fs::File;
 use std::io::BufReader;
 use calamine::{XlsxError, DeError};

@@ -1,7 +1,7 @@
 use std::path::PathBuf;
 
 use crate::config::{Config, ConfigError};
-use calamine::{open_workbook, Error, RangeDeserializerBuilder, Reader, Xlsx};
+use calamine::{open_workbook, RangeDeserializerBuilder, Reader, Xlsx};
 use serde::{Deserialize, Serialize};
 
 #[derive(PartialEq, Serialize, Deserialize, Debug)]

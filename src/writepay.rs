@@ -2,7 +2,6 @@ use crate::config::{Config, ConfigError, Output};
 use crate::employee::Employee;
 use crate::formatprn;
 use crate::payment::Payment;
-use calamine::Error;
 use std::fs;
 use std::path::PathBuf;
 
