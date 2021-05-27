@@ -9,8 +9,6 @@ mod formatprn;
 mod payment;
 mod writepay;
 
-use toml;
-use std::fs::write;
 
 const VERSION: &'static str = env!("CARGO_PKG_VERSION");
 
