@@ -12,11 +12,6 @@ mod writepay;
 use toml;
 use std::fs::write;
 
-fn write_config_toml(config: config::Config) {
-    let t = toml::to_string_pretty(&config.excel).unwrap();
-    write("config.toml", t).unwrap();
-}
-
 const VERSION: &'static str = env!("CARGO_PKG_VERSION");
 
 const MONTHS: &[&str] = &[
@@ -150,7 +145,6 @@ pub fn gen_files(date: String, envio: u32) -> Result<(), ConfigError> {
     let employees = employee::get_employees(&config)?;
     let mut pay = payment::Payment::new(&config, &employees);
     writepay::write_outputs(&config, &employees, &mut pay)?;
-    write_config_toml(config);
     Ok(())
 }
 
