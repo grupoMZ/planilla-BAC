@@ -5,7 +5,6 @@ use std::fs::File;
 use std::io::BufReader;
 use thiserror::Error;
 
-const CONFIG_FNAME: &'static str = "config.json";
 #[derive(Error, Debug)]
 pub enum ConfigError {
     #[error("{err:#?} \r\nEl archivo {path:?} no fue encontrado.")]
@@ -76,23 +75,21 @@ pub struct Excel {
 }
 
 impl Config {
-    pub fn new(date: String, envio: u32) -> Result<Config, ConfigError> {
-        let mut c = Config::get_config()?;
+    pub fn new(date: String, envio: u32, config: String) -> Result<Config, ConfigError> {
+        let mut c = Config::get_config(config)?;
         c.bac.date = date;
         c.replace_month();
         c.replace_envio_correlative(envio);
         Ok(c)
     }
 
-    fn get_config() -> Result<Config, ConfigError> {
-        let path = CONFIG_FNAME.to_string();
-        let file = File::open(&path).map_err(|err| ConfigError::FileNameError { err, path })?;
+    fn get_config(path: String) -> Result<Config, ConfigError> {
+        let path_ = path.clone();
+        let file = File::open(&path_).map_err(|err| ConfigError::FileNameError { err, path })?;
         let reader = BufReader::new(file);
 
-        let c = serde_json::from_reader(reader).map_err(|err| ConfigError::ParseError {
-            err,
-            path: CONFIG_FNAME.to_string(),
-        })?;
+        let c = serde_json::from_reader(reader)
+            .map_err(|err| ConfigError::ParseError { err, path: path_ })?;
 
         Ok(c)
     }
@@ -134,7 +131,7 @@ mod tests {
     use super::*;
     #[test]
     fn get_cfg() {
-        let c = Config::new("20200101".to_string(), 123).unwrap();
+        let c = Config::new("20200101".to_string(), 123, "config.json".to_string()).unwrap();
 
         assert_eq!("9679", c.bac.plan);
         assert_eq!("DEC", c.month[11]);
@@ -150,7 +147,7 @@ mod tests {
 
     #[test]
     fn get_envio() {
-        let c = Config::new("20200101".to_string(), 123).unwrap();
+        let c = Config::new("20200101".to_string(), 123, "config.json".to_string()).unwrap();
 
         assert_eq!("00123", c.get_envio(0));
         assert_eq!("00125", c.get_envio(2));

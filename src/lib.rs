@@ -10,6 +10,7 @@ mod payment;
 mod writepay;
 
 const VERSION: &'static str = env!("CARGO_PKG_VERSION");
+const CONFIG_FNAME: &'static str = "config.json";
 
 const MONTHS: &[&str] = &[
     "",
@@ -137,8 +138,24 @@ pub fn get_envio_correlative() -> u32 {
     envio
 }
 
-pub fn gen_files(date: String, envio: u32) -> Result<(), ConfigError> {
-    let config = config::Config::new(date, envio)?;
+pub fn get_config_file_name(args: Vec<String>) -> String {
+    // The name of the configuration file can be optionally
+    // specified as the first command line argument to the program
+    let config = if args.len() == 2 {
+        args[1].clone()
+    } else {
+        CONFIG_FNAME.to_string()
+    };
+
+    println!("");
+    println!("El archivo de configuración a usar es: \"{}\"", config);
+    println!("");
+
+    config
+}
+
+pub fn gen_files(date: String, envio: u32, config: String) -> Result<(), ConfigError> {
+    let config = config::Config::new(date, envio, config)?;
     let employees = employee::get_employees(&config)?;
     let mut pay = payment::Payment::new(&config, &employees);
     writepay::write_outputs(&config, &employees, &mut pay)?;
@@ -161,4 +178,25 @@ pub fn display_success() -> Result<(), ConfigError> {
     println!("[INFO] Programa ejecutado correctamente");
     let _: String = input().msg("Presione Enter para cerrar esta ventana").get();
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn get_config_file_name_default() {
+        let fname_in = CONFIG_FNAME.to_string();
+        let args = vec!["program_name".to_string()];
+        let fname_out = get_config_file_name(args);
+        assert_eq!(&fname_in, &fname_out);
+    }
+
+    #[test]
+    fn get_config_file_name_arg() {
+        let fname_in = "xyz.json".to_string();
+        let args = vec!["program_name".to_string(), fname_in.clone()];
+        let fname_out = get_config_file_name(args);
+        assert_eq!(&fname_in, &fname_out);
+    }
 }
