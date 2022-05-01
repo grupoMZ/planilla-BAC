@@ -8,7 +8,7 @@ use serde::{Deserialize, Serialize};
 pub struct Employee {
     pub alias: String,
     pub nombre: String,
-    pub nit: String,
+    pub id: String,
     pub cuenta: String,
 }
 
@@ -39,7 +39,7 @@ fn get_employees_from(xlpath: &str) -> Result<Vec<Employee>, ConfigError> {
 
     let sheet = String::from(name);
     let fname = String::from(xlpath);
-    let columns = ["alias", "nombre", "nit", "cuenta"];
+    let columns = ["alias", "nombre", "id", "cuenta"];
     let iter_result = RangeDeserializerBuilder::with_headers(&columns)
         .from_range::<_, Employee>(&range)
         .map_err(|err| ConfigError::ExcelParseError { err, sheet, fname })?;
@@ -62,18 +62,24 @@ mod tests {
         let path = "./tests/test_empleados_bac.xlsx";
         let e = get_employees_from(path).expect("ERROR");
         let e0 = Employee {
-            nit: String::from("123"),
+            id: String::from("123"),
             nombre: String::from("ABC XYZ"),
             cuenta: String::from("789"),
             alias: String::from("Abc"),
         };
         let e1 = Employee {
-            nit: String::from("987654321"),
+            id: String::from("987654321"),
             nombre: String::from("UVW DEF"),
             cuenta: String::from("123"),
             alias: String::from("Def"),
         };
-        let u = vec![e0, e1];
+        let e2 = Employee {
+            id: String::from("01 "),
+            nombre: String::from("ID con apostrofe y espacio"),
+            cuenta: String::from("321"),
+            alias: String::from("OPQ"),
+        };
+        let u = vec![e0, e1, e2];
         assert_eq!(e, u);
     }
 }
