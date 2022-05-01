@@ -9,7 +9,6 @@ mod formatprn;
 mod payment;
 mod writepay;
 
-
 const VERSION: &'static str = env!("CARGO_PKG_VERSION");
 
 const MONTHS: &[&str] = &[
@@ -148,7 +147,10 @@ pub fn gen_files(date: String, envio: u32) -> Result<(), ConfigError> {
 
 pub fn display_error(error: String) -> Result<(), ConfigError> {
     println!("");
-    println!("[ERROR] El programa no fue ejecutado correctamente. \r\n{}", error);
+    println!(
+        "[ERROR] El programa no fue ejecutado correctamente. \r\n{}",
+        error
+    );
     println!("");
     let _: String = input().msg("Presione Enter para cerrar esta ventana").get();
     return Err(ConfigError::EndError);

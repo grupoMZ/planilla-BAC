@@ -1,31 +1,38 @@
 // TODO: Detect month automatically
+use calamine::{DeError, XlsxError};
 use serde::{Deserialize, Serialize};
 use std::fs::File;
 use std::io::BufReader;
-use calamine::{XlsxError, DeError};
 use thiserror::Error;
 
 const CONFIG_FNAME: &'static str = "config.json";
 #[derive(Error, Debug)]
 pub enum ConfigError {
     #[error("{err:#?} \r\nEl archivo {path:?} no fue encontrado.")]
-    FileNameError {err: std::io::Error, path: String},
+    FileNameError { err: std::io::Error, path: String },
     #[error("{err:#?} \r\nEl archivo {path:?} no fue encontrado.")]
-    ExcelFileError {err: XlsxError, path: String},
+    ExcelFileError { err: XlsxError, path: String },
     #[error("La hoja {sheet:?} no fue encontrada en el archivo {fname:?}.")]
-    ExcelSheetError {sheet: String, fname: String},
+    ExcelSheetError { sheet: String, fname: String },
     #[error("{err:#?} \r\nLa hoja {sheet:?} en el archivo {fname:?} no pudo ser analizada.")]
-    ExcelParseError {err: DeError, sheet: String, fname: String},
+    ExcelParseError {
+        err: DeError,
+        sheet: String,
+        fname: String,
+    },
     #[error("La ruta {path:?} no es valida.")]
-    PathError {path: String},
+    PathError { path: String },
     #[error("{err:#?} \r\nEl archivo {path:?} no pudo ser analizado.")]
-    ParseError {err: serde_json::Error, path: String},
+    ParseError {
+        err: serde_json::Error,
+        path: String,
+    },
     #[error("Error en la celda (fila: {row:?}, columna: {col:?}).")]
-    ExcelCellError {row: usize, col: usize},
+    ExcelCellError { row: usize, col: usize },
     #[error(transparent)]
     IOError(#[from] std::io::Error),
     #[error("Closing")]
-    EndError
+    EndError,
 }
 #[derive(PartialEq, Serialize, Deserialize, Debug)]
 pub struct Config {
@@ -40,7 +47,7 @@ pub struct Output {
     pub dir: String,
     pub file: String,
     pub text: String,
-    pub inputs: Vec<Input>
+    pub inputs: Vec<Input>,
 }
 
 #[derive(PartialEq, Serialize, Deserialize, Debug)]
@@ -79,17 +86,19 @@ impl Config {
 
     fn get_config() -> Result<Config, ConfigError> {
         let path = CONFIG_FNAME.to_string();
-        let file = File::open(&path).map_err(|err| ConfigError::FileNameError {err, path})?;
+        let file = File::open(&path).map_err(|err| ConfigError::FileNameError { err, path })?;
         let reader = BufReader::new(file);
 
-        let c = serde_json::from_reader(reader).map_err(|err| 
-        ConfigError::ParseError { err, path: CONFIG_FNAME.to_string() })?;
+        let c = serde_json::from_reader(reader).map_err(|err| ConfigError::ParseError {
+            err,
+            path: CONFIG_FNAME.to_string(),
+        })?;
 
         Ok(c)
     }
 
     fn replace_month(&mut self) {
-        let month = &self.bac.date[4..6].to_string();  // date in format "YYYYMMDD"
+        let month = &self.bac.date[4..6].to_string(); // date in format "YYYYMMDD"
         let m: usize = month.parse().unwrap();
         let idx = m - 1;
         for output in self.outputs.iter_mut() {
@@ -112,16 +121,13 @@ impl Config {
         }
         for (i, output) in self.outputs.iter_mut().enumerate() {
             output.file = output.file.replace("#####", &envios[i]);
-        }       
+        }
     }
 
     pub fn get_envio(&self, offset: usize) -> String {
         format!("{:0>5}", self.bac.envio + offset as u32)
     }
 }
-
-
-
 
 #[cfg(test)]
 mod tests {
@@ -136,7 +142,10 @@ mod tests {
         assert_eq!("00123 pago BAC salario ENE.prn", c.outputs[0].file);
         assert_eq!("00124 pago BAC viatico ENE.prn", c.outputs[1].file);
         assert_eq!("00125 pago BAC propina ENE.prn", c.outputs[2].file);
-        assert_eq!("01 GMZ Planilla Operaciones ENE.xlsx", c.outputs[0].inputs[0].file);
+        assert_eq!(
+            "01 GMZ Planilla Operaciones ENE.xlsx",
+            c.outputs[0].inputs[0].file
+        );
     }
 
     #[test]

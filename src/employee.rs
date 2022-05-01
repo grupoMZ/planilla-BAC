@@ -24,8 +24,8 @@ pub fn get_employees(config: &Config) -> Result<Vec<Employee>, ConfigError> {
 
 fn get_employees_from(xlpath: &str) -> Result<Vec<Employee>, ConfigError> {
     let path = String::from(xlpath);
-    let mut workbook: Xlsx<_> = open_workbook(xlpath)
-    .map_err(|err| ConfigError::ExcelFileError { err, path })?;
+    let mut workbook: Xlsx<_> =
+        open_workbook(xlpath).map_err(|err| ConfigError::ExcelFileError { err, path })?;
     let name = "data";
     let sheet = String::from(name);
     let fname = String::from(xlpath);
