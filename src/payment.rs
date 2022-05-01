@@ -22,10 +22,9 @@ struct Text {
     amount: String,
 }
 
-
 impl Payment {
     pub fn new(config: &Config, employees: &Vec<Employee>) -> Payment {
-        let persons  = HashMap::new();
+        let persons = HashMap::new();
         let date = config.bac.date.clone();
         let column = Column {
             alias: 255,
@@ -81,7 +80,7 @@ impl Payment {
     pub fn get_total_payment(&self) -> u64 {
         let mut total = 0;
 
-        for (_alias, amount ) in self.persons.iter() {
+        for (_alias, amount) in self.persons.iter() {
             total += amount;
         }
         total
@@ -91,22 +90,26 @@ impl Payment {
         self.persons.len() as u64
     }
 
-    pub fn compute_payment_amount(&mut self, xlpath: &str, psheet: &String) -> Result<(), ConfigError> {
+    pub fn compute_payment_amount(
+        &mut self,
+        xlpath: &str,
+        psheet: &String,
+    ) -> Result<(), ConfigError> {
         let path = String::from(xlpath);
-        let mut workbook: Xlsx<_> = open_workbook(xlpath)
-    .map_err(|err| ConfigError::ExcelFileError { err, path })?;
+        let mut workbook: Xlsx<_> =
+            open_workbook(xlpath).map_err(|err| ConfigError::ExcelFileError { err, path })?;
 
-    let name = psheet.as_str();
-    let sheet = psheet.clone();
-    let fname = String::from(xlpath);
+        let name = psheet.as_str();
+        let sheet = psheet.clone();
+        let fname = String::from(xlpath);
 
         let range = workbook
             .worksheet_range(&name)
-        .ok_or_else(|| ConfigError::ExcelSheetError { sheet, fname })?
-        .map_err(|err| ConfigError::ExcelFileError {
-            err,
-            path: String::from(xlpath),
-        })?;
+            .ok_or_else(|| ConfigError::ExcelSheetError { sheet, fname })?
+            .map_err(|err| ConfigError::ExcelFileError {
+                err,
+                path: String::from(xlpath),
+            })?;
 
         for (_i, row) in range.rows().enumerate() {
             let column = self.find_name_amount_columns(row);
@@ -137,7 +140,10 @@ impl Payment {
                         let ff = f.get_float();
                         let n: u64 = match ff {
                             None => {
-                                return Err(ConfigError::ExcelCellError { row: i, col: self.column.amount});
+                                return Err(ConfigError::ExcelCellError {
+                                    row: i,
+                                    col: self.column.amount,
+                                });
                             }
                             Some(nn) => (nn * 100.0).round() as u64,
                         };
@@ -146,7 +152,10 @@ impl Payment {
                         let ff = f.get_int();
                         match ff {
                             None => {
-                                return Err(ConfigError::ExcelCellError { row: i, col: self.column.amount});
+                                return Err(ConfigError::ExcelCellError {
+                                    row: i,
+                                    col: self.column.amount,
+                                });
                             }
                             Some(nn) => nn as u64,
                         };
@@ -184,7 +193,6 @@ impl Payment {
         None
     }
 }
-
 
 #[cfg(test)]
 mod tests {
