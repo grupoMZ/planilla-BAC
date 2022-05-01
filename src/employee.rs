@@ -74,10 +74,10 @@ mod tests {
             alias: String::from("Def"),
         };
         let e2 = Employee {
-            id: String::from("55544433"),
-            nombre: String::from("IJK LMN"),
-            cuenta: String::from("456"),
-            alias: String::from("ijk"),
+            id: String::from("01 "),
+            nombre: String::from("ID con apostrofe y espacio"),
+            cuenta: String::from("321"),
+            alias: String::from("OPQ"),
         };
         let u = vec![e0, e1, e2];
         assert_eq!(e, u);

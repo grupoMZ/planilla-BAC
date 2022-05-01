@@ -78,6 +78,7 @@ pub fn gen_employee_entries(config: &Config, payment: &Payment, employees: &Vec<
 fn format_id(id: &String) -> String {
     let dui_len = 9;
     let nit_len = 14;
+    let id = id.trim();
     if id.len() <= dui_len {
         return format!("{:0>width$}", id, width=dui_len);  // always 14 digits
     } else if id.len() <= nit_len {  // ID is a NIT
@@ -159,6 +160,16 @@ mod tests {
     #[test]
     fn format_id_dui_exact() {
         assert_eq!("123456789", format_id(&"123456789".to_string()));
+    }
+
+    #[test]
+    fn format_id_dui_exact_trailing_space() {
+        assert_eq!("123456789", format_id(&"123456789 ".to_string()));
+    }
+
+    #[test]
+    fn format_id_dui_exact_leading_trailing_space() {
+        assert_eq!("012345678", format_id(&" 012345678 ".to_string()));
     }
 
     #[test]
