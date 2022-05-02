@@ -105,12 +105,13 @@ impl Payment {
 
         let range = workbook
             .worksheet_range(&name)
-            .ok_or_else(|| ConfigError::ExcelSheetError { sheet, fname })?
+            .ok_or_else(|| ConfigError::ExcelSheetError { sheet: sheet.clone(), fname: fname.clone() })?
             .map_err(|err| ConfigError::ExcelFileError {
                 err,
                 path: String::from(xlpath),
             })?;
 
+        let mut text_err = true;
         for (_i, row) in range.rows().enumerate() {
             let column = self.find_name_amount_columns(row);
             match column {
@@ -118,10 +119,20 @@ impl Payment {
                 Some(c) => {
                     self.column.amount = c.amount;
                     self.column.alias = c.alias;
+                    text_err = false;
                     break;
                 }
             }
         }
+        if text_err {
+            return Err(ConfigError::ExcelTextError {
+                fname: fname.clone(),
+                sheet: sheet.clone(),
+                text_amount: self.text.amount.clone(),
+                text_alias: self.text.alias.clone(),
+            });
+        }
+
         for (i, row) in range.rows().enumerate() {
             self.compute_persons_payment(row, i)?;
         }
@@ -209,6 +220,7 @@ mod tests {
         assert_eq!(0, payment.persons[&e0.alias]);
         assert_eq!(0, payment.persons[&el.alias]);
     }
+
     #[test]
     fn get_pay() {
         let path = "./tests/Planilla_ISSS_y_AFP_2021/04 GMZ Planilla Operaciones ABR.xlsx";
@@ -222,6 +234,30 @@ mod tests {
         assert_eq!(22, payment.column.amount);
         assert_eq!(123456, payment.persons["MARIA JOSE"]); // remains unchanged from test
         assert_eq!(7890 + 32579, payment.persons["SIRIA"]); // add to test the amount in planilla
+    }
+
+    #[test]
+    fn wrong_text_excel_alias() {
+        let path = "./tests/Planilla_ISSS_y_AFP_2021/04 GMZ Planilla Operaciones ABR.xlsx";
+        let sheet = " Planilla Ops  1  al 31 ".to_string();
+        let alias = "NONEXISTING".to_string();
+        let amount = "RECIB".to_string();
+        let mut payment = Payment::new_test_payment(alias.clone(), amount.clone());
+        let result = payment.compute_payment_amount(path.clone(), &sheet);
+        //let expect = ConfigError::ExcelTextError { fname: path.to_string(), text_amount: amount, text_alias: alias };
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn wrong_text_excel_amount() {
+        let path = "./tests/Planilla_ISSS_y_AFP_2021/04 GMZ Planilla Operaciones ABR.xlsx";
+        let sheet = " Planilla Ops  1  al 31 ".to_string();
+        let alias = "NOMBRE".to_string();
+        let amount = "NONEXISTING".to_string();
+        let mut payment = Payment::new_test_payment(alias.clone(), amount.clone());
+        let result = payment.compute_payment_amount(path.clone(), &sheet);
+        //let expect = ConfigError::ExcelTextError { fname: path.to_string(), text_amount: amount, text_alias: alias };
+        assert!(result.is_err());
     }
 
     #[test]
@@ -241,4 +277,5 @@ mod tests {
         let d = payment.get_total_transactions();
         assert_eq!(2, d);
     }
+
 }

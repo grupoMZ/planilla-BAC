@@ -26,6 +26,15 @@ pub enum ConfigError {
         err: serde_json::Error,
         path: String,
     },
+    #[error("En archivo {fname:?}, hoja {sheet:?},
+no fue encontrada una fila con los subtextos en celda según archivo de configuración:
+\"excel.amount\": {text_amount:?},\r\n\"excel.name\": {text_alias:?}.")]
+    ExcelTextError {
+        fname: String,
+        sheet: String,
+        text_amount: String,
+        text_alias: String,
+    },
     #[error("Error en la celda (fila: {row:?}, columna: {col:?}).")]
     ExcelCellError { row: usize, col: usize },
     #[error(transparent)]
