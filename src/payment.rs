@@ -51,7 +51,7 @@ impl Payment {
     }
 
     #[cfg(test)]
-    pub fn new_test_payment() -> Payment {
+    pub fn new_test_payment(alias: String, amount: String) -> Payment {
         let mut persons = HashMap::new();
         persons.insert("MARIA JOSE".to_string(), 123456 as u64);
         persons.insert("SIRIA".to_string(), 7890 as u64);
@@ -63,8 +63,8 @@ impl Payment {
                 amount: usize::MAX,
             },
             text: Text {
-                alias: "NOMBRE".to_string(),
-                amount: "RECIB".to_string(),
+                alias,
+                amount,
             },
         };
 
@@ -213,7 +213,9 @@ mod tests {
     fn get_pay() {
         let path = "./tests/Planilla_ISSS_y_AFP_2021/04 GMZ Planilla Operaciones ABR.xlsx";
         let sheet = " Planilla Ops  1  al 31 ".to_string();
-        let mut payment = Payment::new_test_payment();
+        let alias = "NOMBRE".to_string();
+        let amount = "RECIB".to_string();
+        let mut payment = Payment::new_test_payment(alias, amount);
         payment.compute_payment_amount(path, &sheet).expect("ERROR");
         //assert_matches!(e, u);
         assert_eq!(1, payment.column.alias);
@@ -224,14 +226,18 @@ mod tests {
 
     #[test]
     fn total_payment() {
-        let payment = Payment::new_test_payment();
+        let alias = "NOMBRE".to_string();
+        let amount = "RECIB".to_string();
+        let payment = Payment::new_test_payment(alias, amount);
         let d = payment.get_total_payment();
         assert_eq!(131346, d);
     }
 
     #[test]
     fn total_transactions() {
-        let payment = Payment::new_test_payment();
+        let alias = "NOMBRE".to_string();
+        let amount = "RECIB".to_string();
+        let payment = Payment::new_test_payment(alias, amount);
         let d = payment.get_total_transactions();
         assert_eq!(2, d);
     }

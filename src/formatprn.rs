@@ -101,7 +101,9 @@ mod tests {
     #[test]
     fn first_line_header() {
         let c = Config::new("20210531".to_string(), 17, "config.json".to_string()).unwrap();
-        let payment = Payment::new_test_payment();
+        let alias = "NOMBRE".to_string();
+        let amount = "RECIB".to_string();
+        let payment = Payment::new_test_payment(alias, amount);
         let s = gen_first_line(&c, &payment, &c.get_envio(0));
         assert_eq!(
             "B967900017                         20210530       131346    2\r\n",
