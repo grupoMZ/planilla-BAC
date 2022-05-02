@@ -27,8 +27,8 @@ impl Payment {
         let persons = HashMap::new();
         let date = config.bac.date.clone();
         let column = Column {
-            alias: 255,
-            amount: 255,
+            alias: usize::MAX,
+            amount: usize::MAX,
         };
         let text = Text {
             alias: config.excel.name.clone(),
@@ -59,8 +59,8 @@ impl Payment {
             persons,
             date: String::from("20210530"),
             column: Column {
-                alias: 255,
-                amount: 255,
+                alias: usize::MAX,
+                amount: usize::MAX,
             },
             text: Text {
                 alias: "NOMBRE".to_string(),
