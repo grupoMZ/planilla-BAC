@@ -20,7 +20,8 @@ fn assert_files_eq(fref: &str, fgen: &str) {
 fn output_prn_files() {
     let date = String::from("20210430");
     let envio = 17;
-    pbac::gen_files(date, envio).unwrap();
+    let config = "config.json".to_string();
+    pbac::gen_files(date, envio, config).unwrap();
     assert_files_eq(
         "./tests/00017_test_salario_ABR.prn",
         "./tests/pago_bac/00017 pago BAC salario ABR.prn",
