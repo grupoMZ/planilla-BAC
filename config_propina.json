@@ -1,0 +1,62 @@
+{
+    "outputs": [
+        {
+            "dir": "./tests/pago_bac",
+            "file": "##### pago BAC propina %%%.prn",
+            "text": "PROPINA %%%",
+            "inputs": [
+                {
+                    "dir": "./tests/Planilla_Retenciones_2021",
+                    "file": "## GMZ Planilla de eventuales %%%.xlsx",
+                    "sheets": [
+                        "Propina Bar y Cocina  "
+                    ]
+                }
+            ]
+        }
+    ],
+    "excel": {
+        "name": "NOMBRE",
+        "amount": "RECIB",
+        "empleados_bac": "empleados_bac.xlsx"
+    },
+    "bac": {
+        "plan": "9679",
+        "mes": "00",
+        "envio": 0,
+        "batch": "B",
+        "trans": "T",
+        "date": "20001231",
+        "colwidth": [
+            1,
+            4,
+            5,
+            20,
+            5,
+            4,
+            2,
+            2,
+            13,
+            5,
+            30,
+            1,
+            30,
+            9,
+            2
+        ]
+    },
+    "month": [
+        "ENE",
+        "FEB",
+        "MAR",
+        "ABR",
+        "MAY",
+        "JUN",
+        "JUL",
+        "AGO",
+        "SEP",
+        "OCT",
+        "NOV",
+        "DEC"
+    ]
+}
