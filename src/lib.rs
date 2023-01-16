@@ -63,11 +63,11 @@ pub fn print_version() {
     println!("");
 }
 
-pub fn get_date() -> String {
+pub fn get_output_date() -> String {
     let mut date = Local::today();
     loop {
         println!(
-            "La fecha a usar es: {}-{:0>2}-{:0>2}",
+            "La fecha de pago a usar dentro del archivo .prn a ser generado es: {}-{:0>2}-{:0>2}",
             date.year(),
             date.month(),
             date.day()
@@ -114,13 +114,55 @@ pub fn get_date() -> String {
 
     println!("");
     println!(
-        "La fecha a usar es {}-{:0>2}-{:0>2}",
+        "La fecha de pago a usar dentro del archivo .prn a ser generado es {}-{:0>2}-{:0>2}",
         date.year(),
         date.month(),
         date.day()
     );
+    println!("");
 
     format!("{}{:0>2}{:0>2}", date.year(), date.month(), date.day())
+}
+
+pub fn get_input_month() -> String {
+    let mut date = Local::today();
+    loop {
+        let month = date.month();
+        let month_s= MONTHS[month as usize].to_string();
+        println!(
+            "El mes a usar del archivo .xlsx con los datos de los empleados es: {:0>2} ({})",
+            month, month_s
+        );
+        let usethismonth = input()
+            .msg("Desea usar ese mes [Y/n]? ")
+            .default("Y".to_string())
+            .get();
+
+        if usethismonth.eq("Y") {
+            break;
+        } else {
+            println!("El mes actual es {} ({})", month, month_s);
+            let new_month = input()
+                .repeat_msg(
+                    "Presione Intro para usar el mes actual o introduzca un mes diferente: ",
+                )
+                .default(month)
+                .inside_err(1..=12, "[ERROR] Introduzca un valor entre 1 y 12")
+                .get();
+            date = date.with_month(new_month).expect("Mes inválido");
+        }
+    }
+
+    let month = date.month();
+    let month_s= MONTHS[month as usize].to_string();
+    println!("");
+    println!(
+        "El mes a usar del archivo .xlsx con los datos de los empleados es: {:0>2} ({})",
+        month, month_s
+    );
+    println!("");
+
+    format!("{:0>2}", month)
 }
 
 pub fn get_envio_correlative() -> u32 {
@@ -154,8 +196,8 @@ pub fn get_config_file_name(args: Vec<String>) -> String {
     config
 }
 
-pub fn gen_files(date: String, envio: u32, config: String) -> Result<(), ConfigError> {
-    let config = config::Config::new(date, envio, config)?;
+pub fn gen_files(date_out: String, month_in: String, envio: u32, config: String) -> Result<(), ConfigError> {
+    let config = config::Config::new(date_out, month_in, envio, config)?;
     let employees = employee::get_employees(&config)?;
     let mut pay = payment::Payment::new(&config, &employees);
     writepay::write_outputs(&config, &employees, &mut pay)?;

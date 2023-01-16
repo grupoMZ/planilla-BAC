@@ -18,10 +18,11 @@ fn assert_files_eq(fref: &str, fgen: &str) {
 
 #[test]
 fn output_prn_files() {
-    let date = String::from("20210430");
+    let date_out = String::from("20210430");
+    let month_in = String::from("04");  // ABR
     let envio = 17;
     let config = "config.json".to_string();
-    pbac::gen_files(date, envio, config).unwrap();
+    pbac::gen_files(date_out,  month_in, envio, config).unwrap();
     assert_files_eq(
         "./tests/00017_test_salario_ABR.prn",
         "./tests/pago_bac/00017 pago BAC salario ABR.prn",
@@ -33,5 +34,19 @@ fn output_prn_files() {
     assert_files_eq(
         "./tests/00019_test_propina_ABR.prn",
         "./tests/pago_bac/00019 pago BAC propina ABR.prn",
+    );
+}
+
+#[test]
+fn output_prn_files_propina() {
+    // Test generating an output file in April, using input data file from March
+    let date_out = String::from("20210430");
+    let month_in = String::from("03");  // MAR
+    let envio = 19;
+    let config = "config_propina.json".to_string();
+    pbac::gen_files(date_out,  month_in, envio, config).unwrap();
+    assert_files_eq(
+        "./tests/00019_test_propina_MAR.prn",
+        "./tests/pago_bac/00019 pago BAC propina MAR.prn",
     );
 }

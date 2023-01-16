@@ -71,7 +71,6 @@ pub struct BAC {
     pub trans: String,
     pub date: String,
     pub plan: String,
-    pub mes: String,
     pub envio: u32,
     pub colwidth: Vec<usize>,
 }
@@ -84,10 +83,11 @@ pub struct Excel {
 }
 
 impl Config {
-    pub fn new(date: String, envio: u32, config: String) -> Result<Config, ConfigError> {
+    pub fn new(date: String, month_in: String, 
+        envio: u32, config: String) -> Result<Config, ConfigError> {
         let mut c = Config::get_config(config)?;
         c.bac.date = date;
-        c.replace_month();
+        c.replace_month(&month_in);
         c.replace_envio_correlative(envio);
         Ok(c)
     }
@@ -103,20 +103,17 @@ impl Config {
         Ok(c)
     }
 
-    fn replace_month(&mut self) {
-        let month = &self.bac.date[4..6].to_string(); // date in format "YYYYMMDD"
-        let m: usize = month.parse().unwrap();
+    fn replace_month(&mut self, month_in: &String) {
+        let m: usize = month_in.parse().unwrap();
         let idx = m - 1;
         for output in self.outputs.iter_mut() {
             output.text = output.text.replace("%%%", &self.month[idx]);
             output.file = output.file.replace("%%%", &self.month[idx]);
             for input in output.inputs.iter_mut() {
                 input.file = input.file.replace("%%%", &self.month[idx]);
-                input.file = input.file.replace("##", &month);
+                input.file = input.file.replace("##", &month_in);
             }
         }
-
-        self.bac.mes = month.clone();
     }
 
     fn replace_envio_correlative(&mut self, envio: u32) {
@@ -140,7 +137,8 @@ mod tests {
     use super::*;
     #[test]
     fn get_cfg() {
-        let c = Config::new("20200101".to_string(), 123, "config.json".to_string()).unwrap();
+        let c = Config::new("20200101".to_string(), "01".to_string(), 
+        123, "config.json".to_string()).unwrap();
 
         assert_eq!("9679", c.bac.plan);
         assert_eq!("DEC", c.month[11]);
@@ -156,7 +154,8 @@ mod tests {
 
     #[test]
     fn get_envio() {
-        let c = Config::new("20200101".to_string(), 123, "config.json".to_string()).unwrap();
+        let c = Config::new("20200101".to_string(), "01".to_string(),
+         123, "config.json".to_string()).unwrap();
 
         assert_eq!("00123", c.get_envio(0));
         assert_eq!("00125", c.get_envio(2));
