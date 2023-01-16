@@ -100,7 +100,7 @@ mod tests {
     use crate::employee::get_employees;
     #[test]
     fn first_line_header() {
-        let c = Config::new("20210531".to_string(), 17, "config.json".to_string()).unwrap();
+        let c = Config::new("20210531".to_string(), "05".to_string(), 17, "config.json".to_string()).unwrap();
         let alias = "NOMBRE".to_string();
         let amount = "RECIB".to_string();
         let payment = Payment::new_test_payment(alias, amount);
@@ -113,7 +113,7 @@ mod tests {
 
     #[test]
     fn second_line_id_nit() {
-        let config = Config::new("20210530".to_string(), 17, "config.json".to_string()).unwrap();
+        let config = Config::new("20210530".to_string(), "05".to_string(), 17, "config.json".to_string()).unwrap();
         let employees = get_employees(&config).expect("Error opening employees");
         let payment = Payment::new(&config, &employees);
         let num = 2;
@@ -136,7 +136,7 @@ mod tests {
 
     #[test]
     fn third_line_id_dui() {
-        let config = Config::new("20210530".to_string(), 17, "config.json".to_string()).unwrap();
+        let config = Config::new("20210530".to_string(), "05".to_string(), 17, "config.json".to_string()).unwrap();
         let employees = get_employees(&config).expect("Error opening employees");
         let payment = Payment::new(&config, &employees);
         let num = 2;

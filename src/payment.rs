@@ -211,7 +211,8 @@ mod tests {
     use crate::employee::get_employees;
     #[test]
     fn new_payment() {
-        let config = Config::new("20200131".to_string(), 1, "config.json".to_string()).unwrap();
+        let config = Config::new("20200131".to_string(), 
+        "01".to_string(), 1, "config.json".to_string()).unwrap();
         let employees = get_employees(&config).expect("Error leyendo empleados");
         let payment = Payment::new(&config, &employees);
         let e0 = &employees[0];
